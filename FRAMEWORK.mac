@@ -1,0 +1,189 @@
+#turbo 80
+#include autosubs.inc
+#include ninjadvloot.inc
+#bind SetVarInt	/setvarint
+#bind CmdList        /ihchelp
+#Event NotOnTarget	"#*#You cannot see your target#*#"
+#Event NotOnTarget	"#*#Your target is too far away#*#"
+#Event GroupChange	"#*#has left the group#*#"
+#Event GroupChange	"#*#has joined the group#*#"
+Sub Main
+	/doevents flush
+	/declare acverbose				int outer 0
+	/declare MacroName       		string outer IHCZerker
+	/declare IniFileName     		string outer ${MacroName}_${Me.CleanName}.ini
+|-Set Main Assist
+	/declare InAGroup				int outer 0
+	/if (${Group}) /varset InAGroup 1
+	/if (${Target.ID}) {
+		/declare assistname 	string outer ${Target.Name}
+		/declare assistid 	string outer ${Target.ID}
+|		/if (!${InAGroup}) /xtarget set 1 targetstarget
+		/delay 5
+	} else /if (${Group}) {
+		/if (${Group.MainAssist.ID}) {
+			/echo No Target Selected - Switching to Group Main Assist
+			/squelch /target id ${Group.MainAssist.ID}
+			/delay 1s ${Target.ID}
+			/declare assistname 	string outer ${Group.MainAssist.ID}
+			/declare assistid 	string outer ${Group.MainAssist.ID}
+		} else {
+			/echo No Target Selected - Switching to First Group Member
+			/squelch /keypress f2
+			/delay 1s ${Target.ID}
+			/declare assistname 	string outer ${Target.Name}
+			/declare assistid 	string outer ${Target.ID}
+		}
+	} else {
+		/echo No Group or Target - Switching to Solo mode
+		/declare assistname	string outer ${Me.Name}
+		/declare assistid 	string outer ${Me.ID}
+	}	
+|-Debug Switches
+	/declare DEBUGALL 				int outer 0
+	/declare DEBUGAANDisc 			int outer 0
+	/declare DEBUGCombatdps 		int outer 0
+	/declare DEBUGTargeting 		int outer 0
+	/declare DEBUGEngage	 		int outer 0
+|-Create Alias's
+	|-Toggles
+	/squelch /alias /burn			/setvarint Toggle BurnNow
+	/squelch /alias /tglburn		/setvarint Toggle BurnAlways
+	/squelch /alias /tglpet			/setvarint Toggle UsePet
+	/squelch /alias /tglalliance 	/setvarint Toggle UseAlliance
+	/squelch /alias /tglopener		/setvarint Toggle UseOpener
+	/squelch /alias /tglmed			/setvarint Toggle DoMed
+	/squelch /alias /tglloot		/setvarint Toggle LootOn
+	/squelch /alias /tglintim		/setvarint Toggle UseIntimidate
+	/squelch /alias /tglmezbreak	/setvarint Toggle AllowMezBreak
+	/squelch /alias /tglforce		/setvarint Toggle ForceAlliance
+	/squelch /alias /tglaoe			/setvarint Toggle UseAoE
+	/squelch /alias /tglautoaxe		/setvarint Toggle AutoAxe
+	/squelch /alias /tglbp			/setvarint Toggle ChestCombatCast
+	/squelch /alias /tglpoison		/setvarint Toggle UsePoisons
+	/squelch /alias /smartassist	/setvarint Toggle UseSmartAssist
+	|-Sets
+	/squelch /alias /burncount		/setvarint Set BurnMobCount
+	/squelch /alias /autoassistat	/setvarint Set AutoAssistAt
+	/squelch /alias /assistrange	/setvarint Set AssistRange
+	/squelch /alias /medpct			/setvarint Set MedPct
+|-Declare AA's and Discs
+	/declare endregen				string outer NULL
+	/declare beraura				string outer NULL
+	/declare Dfrenzy				string outer NULL
+	/declare Dvolley				string outer NULL
+	/declare Daxethrow				string outer NULL
+	/declare Daxeof					string outer NULL
+	/declare Phantom				string outer NULL
+	/declare Alliance				string outer NULL
+	/declare cheapshot				string outer NULL
+	/declare AESlice				string outer NULL
+	/declare AEVicious				string outer NULL
+	/declare FrenzyBoost			string outer NULL
+	/declare FrenzyBoostBuff		string outer NULL
+	/declare RageStrike				string outer NULL
+	/declare SharedBuff				string outer NULL
+	/declare SharedBuffName			string outer NULL
+	/declare PrimaryBurnDisc		string outer NULL
+	/declare PrimaryBurnDiscID		int outer 0
+	/declare CleavingDisc			string outer NULL
+	/declare CleavingDiscID			int outer 0
+	/declare FlurryDisc				string outer NULL
+	/declare FlurryDiscID			int outer 0
+	/declare DisconDisc				string outer NULL
+	/declare DisconDiscID			int outer 0
+	/declare ResolveDisc			string outer NULL
+	/declare ResolveDiscID			int outer 0
+	/declare HHEBuff				string outer NULL
+
+	/call SetupDiscs
+	/call VarSetup
+	/call SetupAdvLootVars
+	/declare burnnow				int outer 0
+	/declare Ok2Assist				int outer 1
+|-Config Options
+	/call LoadIni General FollowToonName 		string NULL
+	/call LoadIni General UseFellowship 		int 0
+	/call LoadIni General LootOn		 		int 0
+	/call LoadIni General UseMelee		 		int 1
+	/call LoadIni General UseIntimidate		 	int 1
+	/call LoadIni General AllowMezBreak		 	int 0
+	/call LoadIni General StickHow				string NULL
+	/call LoadIni General UsePet		 		int 1
+	/call LoadIni General UseAlliance		 	int 1
+	/call LoadIni General ForceAlliance		 	int 0
+	/call LoadIni General UseOpener			 	int 1
+	/call LoadIni General UseAoE			 	int 0
+	/call LoadIni General DoMed				 	int 1
+	/call LoadIni General EndMedPct			 	int 80
+	/call LoadIni General BurnAlways 			int 0
+	/call LoadIni General BurnMobCount 			int 3
+	/call LoadIni General InstantRelease 		int 0
+	/call LoadIni General AutoCampHold			int 0
+	/call LoadIni General AutoAssistAt			int 98
+	/call LoadIni General UseSmartAssist		int 1
+	/call LoadIni General AssistRange			int 100
+	/call LoadIni General AutoAxe				int 0
+	/call LoadIni General AutoAxeCount			int 300
+	/call LoadIni General AutoAxeMin			int 60
+	/call LoadIni General AutoAxeName			string "Axe of the Demolisher"
+	/call LoadIni General AutoAxeComponents		string "Masterwork Axe Components"
+	/call LoadIni Item ChestItemName			string NULL
+	/call LoadIni Item ChestCombatCast			int 0
+	/call LoadIni Item UsePoisons		 		int 0
+	/call LoadIni Item PoisonName				string NULL
+	/call LoadIni Item PoisonBuffName			string NULL
+	/call AliasSetup
+	/squelch /alias /camphere       /togglevariable ReturnToCamp 1
+	/call AutoVersionCheck 5
+|-Disable mq2melee if its running
+	/if (${Plugin[MQ2Melee].Name.Equal[mq2Melee]}) {
+		/if (${Melee.Enable}) {
+			/if (${DEBUGALL}) /echo DEBUG - MQ2Melee is on turning it off
+			/melee off
+		}
+	}
+|- Check for epic
+	/declare epicaxe					string outer NULL
+	/declare UseEpic					int outer 0
+	/if (${FindItem[Raging Taelosian Alloy Axe].ID}) {
+		/varset epicaxe		Raging Taelosian Alloy Axe
+		/varset UseEpic 1
+	} else /if (${FindItem[Vengeful Taelosian Blood Axe].ID}) {
+		/varset epicaxe		Vengeful Taelosian Blood Axe
+		/varset UseEpic 1
+	}
+|- Check for other zerkers for alliance use - Count is always 1...since your a zerker
+	/declare ZerkerCount					int outer 1
+	/if (${UseAlliance}) {
+		/call AllianceCheck
+	}
+	/rez spawn off
+/echo ****************************
+/echo Welcome to The Framework
+/echo Version 1
+/echo ****************************
+/echo use /ihchelp for a list of commands
+/if (${assistid}==${Me.ID}) {
+	/echo I am Main Assist
+} else {
+	/echo Assisting >> ${assistname} << at ${AutoAssistAt}%
+}
+ :mainloop
+	/call IDUpdateCheck
+	/if (${changetoini}==1) /call INIChanges
+	/if (${Me.Zoning}) /call Zoning
+	/if (${Me.Hovering}) /call DeathSub
+	/if (${Me.XTarget[1].ID} || (${Group.MainAssist.ID} && ${Target.ID}!=${Me.GroupAssistTarget.ID}) || ${SpawnCount[npc radius ${AssistRange} zradius 15 targetable playerstate 4]}) /call FindTarget2
+	/if (${Me.XTarget[1].ID} && ${Target.ID}==${autotargetid} && ${Target.Distance}<${AssistRange} && (!${Target.Mezzed.ID} || ${AllowMezBreak})) /call AANDisc
+	/if (${Me.XTarget[1].ID} && ${Target.PctHPs}<=${AutoAssistAt} && ${UseMelee}==1 && ${Target.ID}==${autotargetid} && ${Target.Distance}<${AssistRange} && (!${Target.Mezzed.ID} || ${AllowMezBreak})) /call BerEngageTarget
+	/if (${Me.XTarget[1].ID} && ${Target.PctHPs}<=${AutoAssistAt} && ${Target.ID}==${autotargetid} && ${Target.Distance}<${AssistRange} && ${Ok2Assist} && (!${Target.Mezzed.ID} || ${AllowMezBreak})) /call Combatdps
+	/if (!${Me.Combat} && !${Me.XTarget[1].ID}) /call DowntimeDiscs
+	/if (${Spawn[${FollowToonName}].ID} && !${MoveTo.Moving} && ${Stick.Status.Equal[OFF]}) /call FollowToon
+	/if (!${Me.XTarget[1].ID}) /call AutoCampCheck
+	/if (${LootOn}) /call LootStuff
+	/if (${DoMed}) /call AutoMed
+	/doevents
+	/varset acverbose 0
+ /goto :mainloop
+/return
