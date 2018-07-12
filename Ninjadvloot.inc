@@ -71,7 +71,7 @@ Sub SetupAdvLootVars(string ChangeIniFile)
     /declare CantLootID							int                 outer 
     /declare NinjadVersion                      string              outer   6.09
     /declare InventoryFull                      int                 outer   0
-    /declare NinjaIniFile                       string              outer   Loot.ini
+    /declare NinjaIniFile                       string              outer   Framework/Loot.ini
     /declare MasterCorpseList                   string              outer   
     /declare Debugloot                          int                 outer   0
     /declare GlobalCount                        int                 outer   5

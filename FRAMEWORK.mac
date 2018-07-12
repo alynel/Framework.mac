@@ -10,7 +10,7 @@
 | -------------------------------------------------------------------------------------
 #warning
 #turbo 120
-#include FRAMEWORK\quest.inc
+#include FRAMEWORK\quests.inc
 #include FRAMEWORK\ninjadvloot.inc
 #include FRAMEWORK\Raid.inc
 #include FRAMEWORK\common.inc
@@ -86,9 +86,9 @@
 #Event CantSee           "You cannot see your target."
 #Event GoMOff            "The gift of magic fades."
 #Event GoMOff            "Your#*#gift of#*#mana fades."
-#Event GoMOn             "#*#granted#*#gift of#*#mana#*#"
-#Event GoMOn             "You feel strengthened by a gift of magic."
-#Event GoMOn             "You feel strengthened by magic."
+#Event GoMActive             "#*#granted#*#gift of#*#mana#*#"
+#Event GoMActive             "You feel strengthened by a gift of magic."
+#Event GoMActive             "You feel strengthened by magic."
 #Event ImDead            "#*#Returning to Bind Location#*#"
 #Event ImDead            "You died."
 #Event ImDead            "You have been slain by#*#"
@@ -204,10 +204,25 @@ Sub Main
         /echo ${ZoneName} has a comma or apostrophe in the name, setting Zone Short Name ...
         /varset ZoneName ${Zone.ShortName}${If[${Me.InInstance},_I,]}
     }
+	/declare IniLevel            int      outer
+	/if (${Me.Level}<=110) /varset IniLevel 110
+	/if (${Me.Level}<=105) /varset IniLevel 105
+	/if (${Me.Level}<=100) /varset IniLevel 100
+	/if (${Me.Level}<=95) /varset IniLevel 95
+	/if (${Me.Level}<=90) /varset IniLevel 90
+	/if (${Me.Level}<=85) /varset IniLevel 85
+	/if (${Me.Level}<=80) /varset IniLevel 80
+	/if (${Me.Level}<=75) /varset IniLevel 75
+	/if (${Me.Level}<=70) /varset IniLevel 70
+	/if (${Me.Level}<=55) /varset IniLevel 55
+	/if (${Me.Level}<=50) /varset IniLevel 50
+	/if (${Me.Level}<=40) /varset IniLevel 40
+	/if (${Me.Level}<=30) /varset IniLevel 30
+	/if (${Me.Level}<=20) /varset IniLevel 20
+	
     /declare MacroName              string      outer       Framework
     /declare MacroVer               string      outer       1.0
-    /declare IniFileName            string      outer       FRAMEWORK/${MacroName}_${EverQuest.Server}_${Me.Class.ShortName}_${IniLevel}.ini
-	/declare IniLevel            string      outer         
+    /declare IniFileName            string      outer       FRAMEWORK/${MacroName}_${Me.Class.ShortName}_${IniLevel}.ini         
     /declare InfoFileName           string      outer       FRAMEWORK/${MacroName}_Info.ini
     /declare ConditionsFileName     string      outer       
     /declare BuffFileName           string      outer       FRAMEWORK/${MacroName}_Buffs.ini
@@ -228,20 +243,7 @@ Sub Main
         /call PParse 0 ${NumParams}
     }
     | if Kiss finds a Kissassist_ServerName_ToonName.ini file it will use that one
-	/if (${Me.Level}<=110) /varset IniLevel 110
-	/if (${Me.Level}<=105) /varset IniLevel 105
-	/if (${Me.Level}<=100) /varset IniLevel 100
-	/if (${Me.Level}<=95) /varset IniLevel 95
-	/if (${Me.Level}<=90) /varset IniLevel 90
-	/if (${Me.Level}<=85) /varset IniLevel 85
-	/if (${Me.Level}<=80) /varset IniLevel 80
-	/if (${Me.Level}<=75) /varset IniLevel 75
-	/if (${Me.Level}<=70) /varset IniLevel 70
-	/if (${Me.Level}<=55) /varset IniLevel 55
-	/if (${Me.Level}<=50) /varset IniLevel 50
-	/if (${Me.Level}<=40) /varset IniLevel 40
-	/if (${Me.Level}<=30) /varset IniLevel 30
-	/if (${Me.Level}<=20) /varset IniLevel 20
+
 
 	
     /declare KissAssistVer          string      outer       ${Ini[${IniFileName},General,KissAssistVer]}
@@ -436,6 +438,8 @@ Sub Main
     /call LoadIni DPS DPSSize                   int         20
     /call LoadIni DPS DPSSkip                   int         20
     /call LoadIni DPS DPSInterval               int         2
+	/call LoadIni DPS AEOn                      int         0
+	/call LoadIni DPS RangeOnly                 int         0
     /declare DPS[${DPSSize}]                    string      outer
     /declare DPSCond[${DPSSize}]                string      outer       TRUE
     |string       sectionName, varName,         varType,    varValue,   varArray,   varArray2,     FileName,        FileName2
@@ -941,13 +945,14 @@ Sub Main
     /call SetupAdvLootVars
     /if (${HealsOn}) {
         /call SortArray Heals HealsCond 100|100 >
-        /call FindSingleHeals
+        
+		/call FindSingleHeals
 		/call rev_FindSingleHeals
-        /call FindGroupHeals
+        |/call FindGroupHeals
+		/call SortArray GroupHeal GHCond 100|100 >
     }
     /call CreateTimersHeals
     /call AlertAddToList 3 "${MobsToIgnore}"
-    /call CreateTimersGoM
     /if (${DPSOn}) {
         /call SortArray DPS DPSCond 1|1 <
     } else {
@@ -8935,77 +8940,20 @@ Sub Main
             }
         }
     /return
-| ----------------------------------------------------------------------------
-| SUB: Event GoM On
-| ----------------------------------------------------------------------------
-   Sub Event_GoMOn
-        /if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,WAR]} || ${GoMByPass}) {
-            /varset GoMByPass 0
-            /doevents flush GoMOn
-            /doevents flush GoMOff
-            /return
-        }
-        /if (!${CombatStart} || ${GoMTimer}) /return
-        | Release timer after trying to cast for 10 secs
-        /varset GoMTimer 3s
-        /declare i int local
-        /declare GoMCast string local
-        /declare GoMTarget string  local
-        /for i 1 to ${GoMSpell.Size}
-            /if (!${ConditionsOn} || !${GoMCOn} || ${If[${GoMCond[${i}]},1,0]}) {
-                /varset GoMCast ${GoMSpell[${i}].Arg[1,|]}
-                /varset GoMTarget ${GoMSpell[${i}].Arg[2,|]}
-                /if (${GoMCast.Equal[null]} || ${GoMCast.Find[spell]} || ${GoMSpellTimer${i}}) /continue
-                /echo Gift of Mana detected! Trying to cast ${GoMCast}
-                /doevents flush GoMOn
-                /if (${GoMTarget.Equal[Mob]} || (${GoMTarget.Equal[NULL]} && ${MyTargetID})) /varset GoMTarget ${MyTargetID} 
-                /if (${GoMTarget.Equal[Me]} && ${Me.ID}) /varset GoMTarget ${Me.ID}
-                /if (${GoMTarget.Equal[MA]} && ${Spawn[=${MainAssist}].ID}) /varset GoMTarget ${Spawn[=${MainAssist}].ID} 
-                /varset GoMActive 1
-                /if (${GoMTarget.Equal[${MyTargetID}]} && (${Target.Type.Equal[Corpse]} || !${Spawn[id ${MyTargetID}].ID})) {
-                    /if (${Debug}) /echo \atDEBUG Event_GoMOn [GoM] skipping because mob is dead or a corpse. \agLine#: ${Macro.CurLine}
-                    /echo [GoM] being skipped, because target (${GoMTarget}) is a corpse.
-                    /varset GoMTimer 0
-                    /delay 10                        
-                    /doevents GoMOff
-                    /return
-                }
-                | Wait for global cooldown if active
-                |/delay 60 ${Me.SpellInCooldown}==FALSE
-                /while (${Me.SpellInCooldown}) {
-                    /if (${MeleeOn}) {
-                        /if (${WeaveArray.Size}>0 && ${WeaveArray[1].NotEqual[null]}) /call WeaveStuff ${MyTargetID}
-                        /if (${MashArray.Size}>0 && ${MashArray[1].NotEqual[null]}) /call MashButtons
-                    } else {
-                        /delay 2
-                    }
-                }
-                /if (${Me.SpellReady[${GoMCast}]}) {
-                    /call CastWhat "${GoMCast}" ${GoMTarget} GoM 0
-                } else {
-                    /echo "${GoMCast}" is not ready!
-                    /delay 10
-                }
-                /if (${Debug}) /echo Return: ${Macro.Return} \agLine#: ${Macro.CurLine}
-                /if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-                    /echo Gift of Mana Casting >> ${GoMCast} << 
-                    /varset GoMTimer 0
-                    /varset GoMSpellTimer${i} (${Spell[${GoMCast}].Duration.TotalSeconds}*${DurationMod})*10
-                    /doevents flush GoMOn
-                    /delay 10
-                    /doevents GoMOff
-                    /return
-                }
-                :NextGOM
-            }
-        /next i
-    /return
+
 	
 | ----------------------------------------------------------------------------
 | SUB: Event GoM Off
 | ----------------------------------------------------------------------------
     Sub Event_GoMOff
     /varset GoMActive 0
+    /return
+
+| ----------------------------------------------------------------------------
+| SUB: Event GoM Active
+| ----------------------------------------------------------------------------
+    Sub Event_GoMActive
+    /varset GoMActive 1
     /return
 	
 | ----------------------------------------------------------------------------
@@ -9382,28 +9330,10 @@ Sub Main
         /for i 1 to ${Heals.Size}
             /varset HealSpell ${Heals[${i}].Arg[1,|]}
             /varset HealPointTag ${Heals[${i}].Arg[3,|]}
-            /if (${HealPointTag.Equal[MA]}) {
-                /varset HealHighestPointMA ${Heals[${i}].Arg[2,|]}
-            } else {
-                /varset HealHighPoint ${Heals[${i}].Arg[2,|]}                
-            }
-            /if (${Debug}) /echo ${i} ${HealSpell} ${Spell[${HealSpell}].TargetType} ${Select[${Spell[${HealSpell}].TargetType},SingleHeal,Self]} \agLine#: ${Macro.CurLine}
-            /if (${HealSpell.Find[Aegis of Superior Divinity]} || ${HealSpell.Find[Harmony of the Soul]} || ${HealSpell.Find[Burst of Life]} || ${HealSpell.Find[Focused Celestial Regeneration]}) {
-                /varcalc SHCount ${SHCount}+1
-                /varset SingleHeal[${SHCount}] ${Heals[${i}]}
-                /vardata SHCond[${SHCount}] HealsCond[${i}]
-            } else /if (${Select[${Me.Class.Name},Druid,Shaman]} && (${HealSpell.Find[Intervention]} || ${HealSpell.Find[Survival]})) {
-                /varcalc SHCount ${SHCount}+1
-                /varset SingleHeal[${SHCount}] ${Heals[${i}]}
-                /vardata SHCond[${SHCount}] HealsCond[${i}]
-            } else /if (${Select[${Spell[${HealSpell}].TargetType},Single,Self]} || ${Spell[${FindItem[=${HealSpell}].Spell}].TargetType.Find[self]} || ${Heals[${i}].Arg[3,|].Find[tap]} || ${Heals[${i}].Arg[3,|].Find[pet]} || ${Spell[${HealSpell}].TargetType.Find[Targeted AE]} && ${Select[${Heals[${i}].Arg[3,|]},MA,ME,pet]}) {
-                /varcalc SHCount ${SHCount}+1
-                /varset SingleHeal[${SHCount}] ${Heals[${i}]}
-                /vardata SHCond[${SHCount}] HealsCond[${i}]
-            } else /if (${Spell[${HealSpell}].TargetType.Equal[Free Target]}) {
-                /varcalc SHCount ${SHCount}+1
-                /varset SingleHeal[${SHCount}] ${Heals[${i}]}
-                /vardata SHCond[${SHCount}] HealsCond[${i}]
+            /if (${HealSpell.NotEqual[null]}) {
+			/varcalc SHCount ${SHCount}+1
+			/varset SingleHeal[${SHCount}] ${Heals[${i}]}
+			/vardata SHCond[${SHCount}] HealsCond[${i}]
             }
             /if (${HealPointTag.NotEqual[MA]} && ${HealHighPoint}>${SingleHealPoint}) /varset SingleHealPoint ${HealHighPoint}
             /if (${HealPointTag.Equal[MA]} && ${HealHighestPointMA}>${SingleHealPointMA}) /varset SingleHealPointMA ${HealHighestPointMA}
@@ -9572,16 +9502,7 @@ Sub rev_FindSingleHeals
             /next p
         /next o
     /return
-| ----------------------------------------------------------------------------
-| SUB: Create Timers GoM
-| ----------------------------------------------------------------------------        
-    Sub CreateTimersGoM    
-        | Declare timers for Rez duration spells
-        /declare i int local
-        /for i 1 to ${GoMSpell.Size}
-            /declare GoMSpellTimer${i} timer outer 0
-        /next i
-    /return    
+
 | ----------------------------------------------------------------------------
 | SUB: ZCheck /call ZAxisCheck current ,Z to check, difference
 | ----------------------------------------------------------------------------
@@ -10091,7 +10012,6 @@ Sub rev_FindSingleHeals
     /declare Section6 string local Cures
     /declare Section7 string local Pet
     /declare Section8 string local PetBuffs
-    /declare Section9 string local GoM
     /declare CountEnrties int local 0
     /declare CountErrors int local 0
     /declare iniKey string local
@@ -10110,7 +10030,7 @@ Sub rev_FindSingleHeals
         }
     /next i
 
-    /for j 1 to 9
+    /for j 1 to 8
         /echo ---------------->> Scanning ${Section${j}} <<----------------
         /varset CountEnrties 0
         /varset CountErrors 0
