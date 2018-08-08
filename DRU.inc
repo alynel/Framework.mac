@@ -14,7 +14,10 @@
  Sub _DRU
 	|/echo in Dru sub
 
-	/if (${Spawn[${MainAssist}].Type.NotEqual[Corpse]} && ${Spawn[${MainAssist}].PctHPs} <= ${Math.Calc[${${MainAssistClass}Point}*.${tmpHealOverride}]}) {
+	/if (${Select[${Me.Class.ShortName},BST,CLR,SHM,DRU,PAL]} && ${Group} && ((${Spawn[${WorstHurt[both,2,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,2,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,2,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,2,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,2,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,2,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,2,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]}))) {
+		|/echo in full group heal
+		/call DoGroupHealStuff ${Group.AvgHPs}
+	} else /if (${Spawn[${MainAssist}].Type.NotEqual[Corpse]} && ${Spawn[${MainAssist}].PctHPs} <= ${Math.Calc[${${MainAssistClass}Point}*.${tmpHealOverride}]}) {
 		|/echo in ma spot
 		|/echo Going to heal MA "${MainAssist}" "${MainAssistType}" ${Spawn[${MainAssist} ${MainAssistType}].PctHPs} ${MostHurtNo}
 		/echo ${Macro.CurLine}

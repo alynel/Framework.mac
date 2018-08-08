@@ -205,21 +205,35 @@ Sub Main
         /varset ZoneName ${Zone.ShortName}${If[${Me.InInstance},_I,]}
     }
 	/declare IniLevel            int      outer
-	/if (${Me.Level}<=110) /varset IniLevel 110
-	/if (${Me.Level}<=105) /varset IniLevel 105
-	/if (${Me.Level}<=100) /varset IniLevel 100
-	/if (${Me.Level}<=95) /varset IniLevel 95
-	/if (${Me.Level}<=90) /varset IniLevel 90
-	/if (${Me.Level}<=85) /varset IniLevel 85
-	/if (${Me.Level}<=80) /varset IniLevel 80
-	/if (${Me.Level}<=75) /varset IniLevel 75
-	/if (${Me.Level}<=70) /varset IniLevel 70
-	/if (${Me.Level}<=55) /varset IniLevel 55
-	/if (${Me.Level}<=50) /varset IniLevel 50
-	/if (${Me.Level}<=40) /varset IniLevel 40
-	/if (${Me.Level}<=30) /varset IniLevel 30
-	/if (${Me.Level}<=20) /varset IniLevel 20
-	
+	/if (${Me.Level}>=110) {
+		/varset IniLevel 110
+	} /else /if (${Me.Level} >= 105) {
+		/varset IniLevel 105
+	} else /if (${Me.Level}>=100) {
+		/varset IniLevel 100
+	} else /if (${Me.Level}>=95) {
+		/varset IniLevel 95
+	} else /if (${Me.Level}>=90) {
+		/varset IniLevel 90
+	} else /if (${Me.Level}>=85) {
+		/varset IniLevel 85
+	} else /if (${Me.Level}>=80) {
+		/varset IniLevel 80
+	} else /if (${Me.Level}>=75) {
+		/varset IniLevel 75
+	} else /if (${Me.Level}>=70) {
+		/varset IniLevel 70
+	} else /if (${Me.Level}>=55) {
+		/varset IniLevel 55
+	} else /if (${Me.Level}>=50) {
+		/varset IniLevel 50
+	} else /if (${Me.Level}>=40) {
+		/varset IniLevel 40
+	} else /if (${Me.Level}>=30) {
+		/varset IniLevel 30
+	} else /if (${Me.Level}>=20) {
+		/varset IniLevel 20
+	}
     /declare MacroName              string      outer       Framework
     /declare MacroVer               string      outer       1.0
     /declare IniFileName            string      outer       FRAMEWORK/${MacroName}_${Me.Class.ShortName}_${IniLevel}.ini         
@@ -1869,9 +1883,8 @@ Sub Main
 						/call _${Me.Class.ShortName}
 						/call WriteDebuffs
 						/if (${DPSOn} || ${MeleeOn} || ${PetOn}) /call CombatTargetCheck
-						|/if (${CombatStart} && ${AutoFireOn}) {
-						|	/if (${Target.ID}==${MyTargetID} && !${Bool[${Target.Mezzed.ID}]}) /range
-						|}
+						|/if (${CombatStart} && ${AutoFireOn} && ${Target.ID}==${MyTargetID} && !${Bool[${Target.Mezzed.ID}]}) /range
+
 						/if (${checkmana} && ${Me.PctMana}<65) /call CastMana combat
 						/if (${MashArray.Size}>0 && ${MashArray[1].NotEqual[null]}) /call MashButtons
 					} else {
@@ -3042,9 +3055,15 @@ Sub Main
         /if (${Me.Gem[${WhatMemSpell}]}) {
             /varset WaitTimerCM 350
             /while (!${Me.SpellReady[${WhatMemSpell}]} && ${WaitTimerCM}) {
-                /delay 5
+				/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
+					/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/echo ${Macro.CurLine}
+					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+					/return
+				}
+                /delay 1
             }
-            /delay 10
+            /delay 1
         }
 		/if (${IAmABard}) {
             /if (${WasTwisting} && !${Twist}) /squelch /twist
@@ -3116,7 +3135,17 @@ Sub Main
                 /if (${Stick.Active}) {
                     /stick pause 
                     /MemSpell ${i} "${SpellToMem}"
-                    /delay 90 ${Me.Gem[${i}].Name.Equal[${SpellToMem}]} 
+					/while (${Me.Gem[${i}].Name.NotEqual[${SpellToMem}]}) {
+					/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
+						/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+						/echo ${Macro.CurLine}
+						/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+
+					}
+					/delay 1
+				
+					}
+                    |/delay 90 ${Me.Gem[${i}].Name.Equal[${SpellToMem}]} 
                     /stick unpause
                 } else {
                     /MemSpell ${i} "${SpellToMem}"
@@ -3677,6 +3706,12 @@ Sub Main
         | Call Buffs Array
         /for i 1 to ${Buffs.Size}
            /doevents
+			/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
+					/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/echo ${Macro.CurLine}
+					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+					/return
+				}
             /if (${Buffs[${i}].Find[|0]}) /continue
             /if (${ChaseAssist} && !${CombatStart}) /call DoWeChase
             /if (${UseModHeal}==0 && ${HealsOn}==1) {
@@ -10631,18 +10666,9 @@ Sub rev_FindSingleHeals
         } else {
            /varset temppCharName ${pCharName}
         }
-		/if (${temppCharName.NotEqual[${Me.CleanName}]}) {
-        /if (${Ini[${MacroName}_${EverQuest.Server}_${temppCharName}.ini,General,KissAssistVer].Length}) {
-            /varset tempIniFileName ${MacroName}_${EverQuest.Server}_${temppCharName}.ini
-            /echo Server Name ini file detected using ${tempIniFileName}
-        } else {
-            /varset tempIniFileName ${MacroName}_${temppCharName}.ini
-        }
-		} else /if (!${PIniSet}) {
-		    /varset tempIniFileName ${MacroName}_${temppCharName}.ini
-		} else {
-		    /varset tempIniFileName ${IniFileName}
-		}
+		
+		/varset tempIniFileName ${IniFileName}
+		
         /varset pKV ${Ini[${tempIniFileName},General,KissAssistVer]}
         /if (${Int[${pKV}]}==0) {
            /echo Invalid INI file: ${tempIniFileName} for memorizing spells. Returning.

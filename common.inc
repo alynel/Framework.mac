@@ -74,6 +74,8 @@
 		/call LoadIni Mod_Heal PALPoint 								int  90
 		/call LoadIni Mod_Heal GoMpoint 								int  80	
 		
+		/declare ReportDefense bool outer FALSE
+		
 		/plugin mq2worsthurt load
 	
 
@@ -106,13 +108,13 @@ Sub newcombatcast
 		/declare SkipFlag    int      local 0
 		/for i ${DPSStart} to ${DPS.Size}
 		/doevents
-		/if (${UseModHeal}==1 && ${HealsOn}==1 && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-			/echo DPS newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
-			/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
-			|(${Group.Member[${i}].Distance}<=200&& ${Group.Member[${i}].PctHPs}<100 && !${Group.Member[${i}].Hovering} && ${Group.Member[${i}].Type.NotEqual[Corpse]})
-			/return
-		}
 
+		/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && ${UseModHeal}==1 && ${HealsOn}==1 && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
+					/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/echo ${Macro.CurLine}
+					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+					|/return
+				}
 		/if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused}) {
 			/if (${DebugCombat}) /echo CombatCast: Return from CombatCast cause my target is a corpse or dead or DPSPaused ${DPSPaused}. \agLine#: ${Macro.CurLine}
 			/return
@@ -279,13 +281,13 @@ Sub mod_AggroCheck
             /if (${ConditionsOn} && ${DPSCOn} && ${If[${AggroCond[${i}]},0,1]}) /continue
             /if ((${AggroGLT.Equal[<]} && ${Me.PctAggro}<${AggroPCT}) || (${AggroGLT.Equal[>]} && ${Me.PctAggro}>${AggroPCT}) && (${Cast.Ready[${AggroSpell}]} || ${Me.AbilityReady[${AggroSpell}]} || (${Me.CombatAbilityReady[${AggroSpell}]} && !${Me.ActiveDisc.ID}))) {
                 /echo Trying to control Aggro: ${Me.PctAggro} ${AggroGLT} ${AggroPCT} ${AggroSpell} 
-                /if (${Select[${AggroTarget},null,Mob]} || ${AggroTarget.Equal[INC]} && ${Spawn[${MyTargetID}].Distance}>${MeleeDistance}) /varset AggroTID ${MyTargetID}
+                /if (${Select[${AggroTarget},null,Mob]} || ${AggroTarget.Equal[INC]} && ${Spawn[${MyTargetID}].Distance}>${MeleeDistance}) /varset AggroTID ${badaggroid}
                 /if (${AggroTarget.Equal[Me]}) /varset AggroTID ${Me.ID}
                 /if (${AggroTarget.Equal[MA]}) /varset AggroTID ${Spawn[=${MainAssist}].ID}
                 /if (${AggroTarget.Equal[Pet]}) /varset AggroTID ${Me.Pet.ID}
                 /if (${AggroTarget.Equal[INC]} && ${Spawn[${MyTargetID}].Distance}<${MeleeDistance}) /continue
                 /call CastWhat "${AggroSpell}" ${AggroTID} Aggro 0
-				/call CastWhat "${AggroSpell}" ${AggroTID} Aggro
+				|/call CastWhat "${AggroSpell}" ${AggroTID} Aggro
                 /delay 10
                 /if (${Macro.Return.Equal[CAST_SUCCESS]}) {
                     /echo Casting >> ${AggroSpell} << to control AGGRO on ${Spawn[${AggroTID}].CleanName}.
