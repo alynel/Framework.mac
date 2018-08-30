@@ -738,6 +738,7 @@ Sub Main
     /declare MainAssist             string      outer
     /declare MainAssistClass        string      outer
     /declare MainAssistType         string      outer
+	|/declare MainAssistID      		int         outer       0
     /declare MashArray[30]          string      outer       null
     /declare MashCond[30]           string      outer       TRUE
     /declare MedStat                string      outer
@@ -1182,7 +1183,7 @@ Sub Main
             }   
         } else {   
             /varset PullMoveUse los
-            /call BroadCast ${IRCOn} ${EQBCOn} r "PULL: Using Line of Sight to Pull with ${PullWith}"
+            /call BroadCast ${IRCOn} ${EQBCOn} r "PULL: Using Line of Sight ppto Pull with ${PullWith}"
         }
     } else {
         /if (${Bool[${Plugin[MQ2Nav]}]}) {
@@ -1205,46 +1206,42 @@ Sub Main
     /call WinTitle
 | -------------------------------------------------------------------------------------
 | Main Loop
+|Mainloop
 | -------------------------------------------------------------------------------------
+/echo ${Math.Calc[${MyTargetID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})].Int}
+/echo ${Math.Calc[${MyTargetID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})].Int}
+/echo ${Math.Calc[${MyTargetID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})].Int}
     /while (1) {
 		/if (!${Role.Equal[manual]}) {
 			/doevents
+			/if (${Me.Hovering}) /call DeathSub
 			/if (${ChainPull}!=2) {
 				/call CampfireBack
 				/if (${AFKToolsOn}) /call AFKTools
-				/if (${DPSOn} || ${MeleeOn}) /call CheckForCombat 0 MainLoop1
-				|/if (${AEOn}) /call AECheck
-				/if (${MezOn}) {
-					/varset GoMByPass 1
-					/call DoMezStuff MainLoop
-					/varset GoMByPass 0
-				}
-				/call WriteDebuffs
-				/if (${UseModHeal}==0 && ${HealsOn}==1) {
-					/if (${HealsOn}) /call CheckHealth				
-				} else /if (${UseModHeal}==1 && ${HealsOn}==1 && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) {
-					/echo ${Macro.CurLine}
-					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
-				}
-				/if (${CuresOn}) /call CheckCures
+				|/echo ${Math.Calc[(${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]} && !${MyTargetID})].Int} FT 1
+				|/echo ${Math.Calc[((${Group.MainAssist.ID} && ${Group.MainAssist.ID}!=${Me.ID} && ${MyTargetID}!=${Me.GroupAssistTarget.ID}))].Int} FT 2
+				|/echo ${Math.Calc[${MyTargetID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})].Int} EG
+				/if (${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]} && (!${Me.Combat} || ${Target.ID}!=${MyTargetID} || !${Target.ID}) && (${Me.XTarget[1].ID} || ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]})) /call FindTarget
+				/if ((${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]} && !${MyTargetID}) || (${DPSOn} && ${MeleeOn} && ${Target.ID}!=${MyTargetID})) /call FindTarget 2
+				/if ((${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID}) && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})) /call EngageTarget
+				
+				|/if (${DPSOn} || ${MeleeOn}) /call CheckForCombat 0 MainLoop1
+				/call _${Me.Class.ShortName}
+				
+
 				/if (${Me.CombatState.NotEqual[COMBAT]} && ${ReturnToCamp}) /call DoWeMove 0 mainloop
 				/if (${Me.CombatState.NotEqual[COMBAT]} && ${ChaseAssist}) /call DoWeChase
-				/if (${AutoRezOn}) /call RezCheck
-				/if (${CampfireOn} && ${Me.CombatState.NotEqual[COMBAT]}) /call Campfire
-				/if (${Select[${Me},${Group.Leader}]}==1 && !${LooterAssigned}) /call AssignLooter
-				/call DoMiscStuff
-				/call CanIDoStuff
+
+				|/if (${CampfireOn} && ${Me.CombatState.NotEqual[COMBAT]}) /call Campfire
+				|/if (${Select[${Me},${Group.Leader}]}==1 && !${LooterAssigned}) /call AssignLooter
+				/if ((${CombatStart} || ${AggroTargetID} || ${Me.CombatState.NotEqual[COMBAT]})) /call DoMiscStuff
 				/if (${MercOn}) /call MercsDoWhat
 				/call CastMana MainLoop
-				/if (${PetOn}) /call DoPetStuff
-				/if (${PetOn}) /call CheckPetBuffs
-				/if (${Me.CombatState.NotEqual[COMBAT]}) {
-					/call WriteBuffs
-					/call WriteBuffsMerc
-					/call WriteBuffsPet
+				/if (${PetOn}) {
+					/call DoPetStuff
+					/call CheckPetBuffs
 				}
 				/if (${BuffsOn}) /call CheckBuffs 0
-				/if (${IAmABard}) /call DoBardStuff
 				/if (${Me.CombatState.NotEqual[COMBAT]}) /if (${MedOn}) /call DoWeMed
 				/if (${Me.CombatState.NotEqual[COMBAT]}) /if (${GroupWatchOn}) /call GroupWatch
 			} else {
@@ -1254,15 +1251,15 @@ Sub Main
 				/if (!${PullMob}) /call FindMobToPull 1
 				/call PullCheck 
 				/varset PullMob 0
-			}
-			/if (${DPSOn} || ${MeleeOn}) {
-				/call CheckForCombat 0 MainLoop2
-			} else {
-				/call CheckForCombat 1 MainLoop3
+				/if (${DPSOn} || ${MeleeOn}) {
+					/call CheckForCombat 0 MainLoop2
+				} else {
+					/call CheckForCombat 1 MainLoop3
+				}
 			}
 			/if (${LootOn}) /call LootStuff
-			/if (${DebugHeal}) /delay 5 
-			/delay 1
+
+			|/delay 1
 		} else /if (${Role.Equal[manual]}) {
 			/doevents
 			/call manual_${Me.Class.ShortName}
@@ -1429,24 +1426,24 @@ Sub Main
                 }
             }
             | Check to see if you are a healer and DPS is off, or DPS is on but the mob is not in LOS
-            /while (${SkipCombat}==1 || (${DPSOn} && ${HealsOn} && !${Spawn[${MyTargetID}].LineOfSight} && ${MyTargetID})) {
-                /if (${DebugCombat}) /echo \atDEBUG CheckForCombat ${SkipCombat} ${Spawn[${MyTargetID}].LineOfSight} ${Spawn[${MyTargetID}].ID} ${MyTargetID} \agLine#: ${Macro.CurLine}
-                /if (${AggroTargetID}) {
-				/if (${UseModHeal}==0 && ${HealsOn}==1) {
-					/if (${HealsOn}) /call CheckHealth				
-				} else /if (${UseModHeal}==1 && ${HealsOn}==1  && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) {
-					/echo ${Macro.CurLine}
-					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
-				}
-                    /if (${CuresOn}) /call CheckCures
-                    /if (${AutoRezOn}) /call RezCheck
-                    /if (!${NamedCheck} && (${BurnAllNamed} || ${GMailEvents.Find[named]})) /call NamedWatch ${SkipCombat}
-                    /call CastMana CheckForCombat
-                    /call WriteDebuffs
-                } else {
-                    /return
-                }
-            }
+            |/while (${SkipCombat}==1 || (${DPSOn} && ${HealsOn} && !${Spawn[${MyTargetID}].LineOfSight} && ${MyTargetID})) {
+            |    /if (${DebugCombat}) /echo \atDEBUG CheckForCombat ${SkipCombat} ${Spawn[${MyTargetID}].LineOfSight} ${Spawn[${MyTargetID}].ID} ${MyTargetID} \agLine#: ${Macro.CurLine}
+            |    /if (${AggroTargetID}) {
+			|	/if (${UseModHeal}==0 && ${HealsOn}==1) {
+			|		/if (${HealsOn}) /call CheckHealth				
+			|	} else /if (${UseModHeal}==1 && ${HealsOn}==1  && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) {
+			|		/echo ${Macro.CurLine}
+			|		/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+			|	}
+            |        /if (${CuresOn}) /call CheckCures
+            |        /if (${AutoRezOn}) /call RezCheck
+            |        /if (!${NamedCheck} && (${BurnAllNamed} || ${GMailEvents.Find[named]})) /call NamedWatch ${SkipCombat}
+            |        /call CastMana CheckForCombat
+            |        /call WriteDebuffs
+            |    } else {
+            |        /return
+            |    }
+            |}
             /call CheckForAdds CheckForCombat
             /if (${Role.Equal[tank]} || ${Role.Equal[pullertank]}) {
                 | If tank is assisting puller and in chase mode
@@ -1785,6 +1782,7 @@ Sub Main
 		/while (${combatTimer}) {
 				/doevents
 				/if (${DebugCombat}) /echo waiting for the mob to get close ${Spawn[${MyTargetID}].Distance} : ${MeleeDistance}
+				/if (${IAmDead}) /return
 				/if (${Spawn[${MyTargetID}].Distance}<${newMeleeDistance}) /break
 				/if (${Me.XTarget}==0) /break
 				/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} >= 1 && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
@@ -1864,83 +1862,70 @@ Sub Main
             /if (${Select[${Zone.ID},795,796]}==0) {
 				/varset tmpHealOverride 85.00
 			}
+			|COMBAT LOOP
 			/while (1) {
-					/if (${DebugCombat}) /echo \atDEBUGCOMBAT Attack 1 \agLine#: ${Macro.CurLine}
-					/varcalc cyclecount (${cyclecount})+1
-					/doevents
-					
-					/if (!${Role.Equal[puller]} || (${Role.Equal[puller]} && !${ChainPull})) {
-						/if (${DebuffAllOn} && (${Role.NotEqual[puller]} || !${ChainPull})) {
-							/if (${DebugCombat}) /echo \atDEBUGCOMBAT Attack 2 \agLine#: ${Macro.CurLine}
-						   | Debuff stuff
-						   /call DoDebuffStuff ${MyTargetID}
-						   |When returning the mob you were started on could be dead, so don't keep trying to kill a corpse.
-						   /if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused}) {
-							   /call CombatReset 0 combat
-							   /return
-						   }
-						}
-						/if (${Role.Equal[offtank]} && !${Spawn[=${MainAssist}].ID}) /switchma ${Me} tank 0
-						|/if (!${NamedCheck} && (${BurnAllNamed} || ${GMailEvents.Find[named]})) /call NamedWatch 0
-						/if (!${UseMQ2Melee} && ${Spawn[${MyTargetID}].Distance}>${Spawn[${MyTargetID}].MaxRangeTo} && ${MeleeOn} && !${Stick.Active}) /moveto id ${MyTargetID} mdist ${Spawn[${MyTargetID}].MaxRangeTo}
-						/call _${Me.Class.ShortName}
-						/call WriteDebuffs
-						/if (${DPSOn} || ${MeleeOn} || ${PetOn}) /call CombatTargetCheck
-						|/if (${CombatStart} && ${AutoFireOn} && ${Target.ID}==${MyTargetID} && !${Bool[${Target.Mezzed.ID}]}) /range
-
-						/if (${checkmana} && ${Me.PctMana}<65) /call CastMana combat
-						/if (${MashArray.Size}>0 && ${MashArray[1].NotEqual[null]}) /call MashButtons
-					} else {
-						
-						/call _${Me.Class.ShortName}
-						
-						/if (${Role.Equal[offtank]} && !${Spawn[=${MainAssist}].ID}) /switchma ${Me} tank 0
-						|/if (${MercOn} && !${MercAssisting} && ${MyTargetID} && ${Mercenary.State.Equal[Active]}) /call MercsDoWhat
-						|/if (!${UseMQ2Melee} && ${Spawn[${MyTargetID}].Distance}>${Spawn[${MyTargetID}].MaxRangeTo} && ${MeleeOn} && !${Stick.Active}) /moveto id ${MyTargetID} mdist ${Spawn[${MyTargetID}].MaxRangeTo}
-						
-						
-						|/if (${AutoRezOn}) /call RezCheck
-						/if (!${NamedCheck} && (${BurnAllNamed} || ${GMailEvents.Find[named]})) /call NamedWatch 0
-						
-						
-						/if (${DebugCombat}) /echo \atDEBUGCOMBAT Attack 3 \agLine#: ${Macro.CurLine}
-						/if (${Me.PctMana}<65) /call CastMana combat
-						/call WriteDebuffs
-						
-						/if (${DPSOn} || ${MeleeOn} || ${PetOn}) /call CombatTargetCheck
-						/if (${MashArray.Size}>0 && ${MashArray[1].NotEqual[null]}) /call MashButtons
-						/if (${Role.Equal[puller]} && ${ChainPull}) {
-							/if (${Math.Distance[${CampYLoc},${CampXLoc}:${Spawn[=${MainAssist}].Y},${Spawn[=${MainAssist}].X}]}<=75) {
-								/if (!${PullHold} && ${MobCount}<2 && !${Me.XTarget[${XTSlot2}].ID} && ${If[${Target.Named},0,1]}==1) {
-									/if (${Target.ID} && ${Target.PctHPs} < ${ChainPullHP}) {
-										/call FindMobToPull 0
-										/if (${Macro.Return}>0 && (!${PullXPCheck} || (${Spawn[${ChainPullTemp}].Distance}<${Math.Calc[${PullRange}+400]} && ${PullXPCheck})) && ${Me.TargetOfTarget.Name.NotEqual[${Me.CleanName}]} && ${Me.PctAggro}<50) {
-											/varset PullMob ${Macro.Return}
-											/if (${UseMQ2Melee}) /squelch /melee melee=0
-											/if (${Stick.Active}) /squelch /stick off 
-											/squelch /attack off
-											/delay 10
-											/if (${UseMQ2Melee}) /squelch /melee melee=1
-											/varset ChainPull 2
-											/varset MyTargetID 0
-											/varset Attacking 0
-											/return
-										}
-									}
+				/varcalc cyclecount (${cyclecount})+1
+				/doevents
+				/if (${IAmDead}) /return
+				/if (${DPSOn} || ${MeleeOn} || ${PetOn}) /call CombatTargetCheck
+				/if (${Role.Equal[offtank]} && !${Spawn[=${MainAssist}].ID}) /switchma ${Me} tank 0
+				/if (${DebuffAllOn} && (${Role.NotEqual[puller]} || !${ChainPull})) {
+					/if (${DebugCombat}) /echo \atDEBUGCOMBAT Attack 2 \agLine#: ${Macro.CurLine}
+				   | Debuff stuff
+				   /call DoDebuffStuff ${MyTargetID}
+				   |When returning the mob you were started on could be dead, so don't keep trying to kill a corpse.
+				   /if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused}) {
+					   /call CombatReset 0 combat
+					   /return
+				   }
+				}
+				
+				/call _${Me.Class.ShortName}
+				/if (!${UseMQ2Melee} && ${Spawn[${MyTargetID}].Distance}>${Spawn[${MyTargetID}].MaxRangeTo} && ${MeleeOn} && !${Stick.Active}) /moveto id ${MyTargetID} mdist ${Spawn[${MyTargetID}].MaxRangeTo}
+				|/if (${CombatStart} && ${AutoFireOn} && ${Target.ID}==${MyTargetID} && !${Bool[${Target.Mezzed.ID}]}) /range
+				
+				/if (!${NamedCheck} && (${BurnAllNamed} || ${GMailEvents.Find[named]})) /call NamedWatch 0
+				/if (${checkmana} && ${Me.PctMana}<65) /call CastMana combat
+				|/call WriteDebuffs
+				
+				/if (${Role.Equal[puller]} && ${ChainPull}) {
+					/if (${Math.Distance[${CampYLoc},${CampXLoc}:${Spawn[=${MainAssist}].Y},${Spawn[=${MainAssist}].X}]}<=75) {
+						/if (!${PullHold} && ${MobCount}<2 && !${Me.XTarget[${XTSlot2}].ID} && ${If[${Target.Named},0,1]}==1) {
+							/if (${Target.ID} && ${Target.PctHPs} < ${ChainPullHP}) {
+								/call FindMobToPull 0
+								/if (${Macro.Return}>0 && (!${PullXPCheck} || (${Spawn[${ChainPullTemp}].Distance}<${Math.Calc[${PullRange}+400]} && ${PullXPCheck})) && ${Me.TargetOfTarget.Name.NotEqual[${Me.CleanName}]} && ${Me.PctAggro}<50) {
+									/varset PullMob ${Macro.Return}
+									/if (${UseMQ2Melee}) /squelch /melee melee=0
+									/if (${Stick.Active}) /squelch /stick off 
+									/squelch /attack off
+									/delay 10
+									/if (${UseMQ2Melee}) /squelch /melee melee=1
+									/varset ChainPull 2
+									/varset MyTargetID 0
+									/varset Attacking 0
+									/return
 								}
-							} else /if (${SpamTankWait}) {
-								/call BroadCast ${IRCOn} ${EQBCOn} r "Holding Pulls. Tank to far from camp."
-								/varset SpamTankWait 0 
 							}
-						}   
-						/if (${Role.Equal[puller]} && ${ChainPull} && ${DebuffAllOn}) /call DebuffCast ${MyTargetID} 1 
-						/if (${Role.Equal[puller]} && ${ChainPull} && ${DPSOn}) /call newcombatcast
+						}
+					} else /if (${SpamTankWait}) {
+						/call BroadCast ${IRCOn} ${EQBCOn} r "Holding Pulls. Tank to far from camp."
+						/varset SpamTankWait 0 
 					}
+					/if (${Role.Equal[puller]} && ${ChainPull} && ${DebuffAllOn}) /call DebuffCast ${MyTargetID} 1 
+					/if (${Role.Equal[puller]} && ${ChainPull} && ${DPSOn}) /call newcombatcast
+				}   
 
-					/if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused} || ${Me.Hovering} || ${Me.Feigning}) {
-						/call CombatReset 0 combat
-						/break					
-					}
+				
+
+				/if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused} || ${Me.Hovering} || ${Me.Feigning}) {
+					/call CombatReset 0 combat
+					/break					
+					|/if (((!${Spawn[targetable id ${KillTargetID}].ID}) || ${Spawn[corpse id ${KillTargetID}].ID}) && ${KillTargetID}!=0) {
+					|/varset KillTargetID 0
+					|/varset SpawnSearchType npc
+	}
+
+				}
 			
 			}
 			
@@ -3059,9 +3044,10 @@ Sub Main
             /varset WaitTimerCM 350
             /while (!${Me.SpellReady[${WhatMemSpell}]} && ${WaitTimerCM}) {
 				/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-					/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/Echo Heal from CastMem While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
 					/echo ${Macro.CurLine}
-					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+					/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
+					|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 					/return
 				}
                 /delay 1
@@ -3140,7 +3126,7 @@ Sub Main
                     /MemSpell ${i} "${SpellToMem}"
 					/while (${Me.Gem[${i}].Name.NotEqual[${SpellToMem}]}) {
 					/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-						/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+						/Echo Heal from CastMem While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
 						/echo ${Macro.CurLine}
 						/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 
@@ -3710,9 +3696,9 @@ Sub Main
         /for i 1 to ${Buffs.Size}
            /doevents
 			/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-					/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
-					/echo ${Macro.CurLine}
-					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
+					/Echo Heal from Buffs While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
+					|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 					/return
 				}
             /if (${Buffs[${i}].Find[|0]}) /continue
@@ -6964,49 +6950,44 @@ Sub Main
             }
         }
         /if (${Debug}) /echo \atDEBUG DoMiscStuff Leave \agLine#: ${Macro.CurLine}
-    /return
-| -------------------------------------------------------------------------------------
-| SUB: Can I do Stuff  - Check if invis moving ducked etc
-| -------------------------------------------------------------------------------------
-    Sub CanIDoStuff
-    /if ((${CombatStart} || ${AggroTargetID} || ${Me.CombatState.NotEqual[COMBAT]})) /return
-    /if (${Debug}) /echo \atDEBUG CanIDoStuff Enter \agLine#: ${Macro.CurLine}
-    /declare DoLoop int local 1
-    /if (${IAmDead} && ${CampZone}==${Zone.ID} && (${Me.Buff[Resurrection Sickness].ID} || ${SpawnCount[pccorpse ${Me}]}==0) ) {
-        /varset IAmDead 0
-        /if (${IAmABard}) {
-            /while (${Me.BardSongPlaying}) {
-                /if (${Twist}) /squelch /twist off
-                /stopsong
-                /delay 5
-            }
-            /varset Twisting 0
-            /varset DPSTwisting 0
-        }
-    }
-    | Turn off twist while invis
-    /if (${Me.Invis} && ${IAmABard} && ${Twist}) {
-        /while (${Me.BardSongPlaying}) {
-            /if (${Twist}) /squelch /twist off
-            /stopsong
-            /delay 5
-        }
-    }
-    | Assign Master looter    
-    /if (${Select[${Me},${Group.Leader}]}==1) /call AssignLooter
-    /while (${DoLoop}) {
-        /doevents
-        /call WriteDebuffs
-        /call RogueStuff
-        /delay 2
-        /call EndMacroIf
-        /if (${Debug} && ${Me.Invis}) /echo You are invisible. 
-        /if (${Me.Moving} || ${Me.State.Equal[feign]} || (${ChaseAssist}==0 && ${AggroTargetID}==0 && ${Me.Invis} && ${Me.Class.Name.NotEqual[Rogue]}) || ${Me.Stunned} || ${Me.Ducking}  || (${Me.State.Equal[BIND]} && !${Window[LootWnd].Open})) /continue
-        /if (${Window[MerchantWnd]} || ${Window[GiveWnd]} || ${Window[SpellBookWnd]} || ${Window[BigBankWnd]} || ${Window[BankWnd]} || ${Window[GuildBankWnd]}  || ${Window[TributeMasterWnd]} || ${Window[GuildTributeMasterWnd]}) /continue
-        /varset DoLoop 0
-    }
-    /if (${Debug}) /echo \atDEBUG CanIDoStuff Leave \agLine#: ${Macro.CurLine}
-    /return
+
+		/declare DoLoop int local 1
+		/if (${IAmDead} && ${CampZone}==${Zone.ID} && (${Me.Buff[Resurrection Sickness].ID} || ${SpawnCount[pccorpse ${Me}]}==0) ) {
+			/varset IAmDead 0
+			/if (${IAmABard}) {
+				/while (${Me.BardSongPlaying}) {
+					/if (${Twist}) /squelch /twist off
+					/stopsong
+					/delay 5
+				}
+				/varset Twisting 0
+				/varset DPSTwisting 0
+			}
+		}
+		| Turn off twist while invis
+		/if (${Me.Invis} && ${IAmABard} && ${Twist}) {
+			/while (${Me.BardSongPlaying}) {
+				/if (${Twist}) /squelch /twist off
+				/stopsong
+				/delay 5
+			}
+		}
+		| Assign Master looter    
+		/if (${Select[${Me},${Group.Leader}]}==1) /call AssignLooter
+		/while (${DoLoop}) {
+			/doevents
+			|/call WriteDebuffs
+			/call RogueStuff
+			/delay 2
+			/call EndMacroIf
+			/if (${Debug} && ${Me.Invis}) /echo You are invisible. 
+			/if (${Me.Moving} || ${Me.State.Equal[feign]} || (${ChaseAssist}==0 && ${AggroTargetID}==0 && ${Me.Invis} && ${Me.Class.Name.NotEqual[Rogue]}) || ${Me.Stunned} || ${Me.Ducking}  || (${Me.State.Equal[BIND]} && !${Window[LootWnd].Open})) /continue
+			/if (${Window[MerchantWnd]} || ${Window[GiveWnd]} || ${Window[SpellBookWnd]} || ${Window[BigBankWnd]} || ${Window[BankWnd]} || ${Window[GuildBankWnd]}  || ${Window[TributeMasterWnd]} || ${Window[GuildTributeMasterWnd]}) /continue
+			/varset DoLoop 0
+		}
+		/if (${CampfireOn} && ${Me.CombatState.NotEqual[COMBAT]}) /call Campfire
+		/if (${Debug}) /echo \atDEBUG DoMiscStuff Leave \agLine#: ${Macro.CurLine}
+/return
 | -------------------------------------------------------------------------------------
 | SUB: Mercs Do What
 | -------------------------------------------------------------------------------------
@@ -7033,6 +7014,8 @@ Sub Main
         /varset MainAssist ${Target.CleanName}
         /varset MainAssistType ${Target.Type}
         /varset MainAssistClass ${Target.Class.ShortName}
+		|/varset MainAssistID    ${Spawn[=${MainAssist}].ID}
+		
         /if (${Debug}) /echo \atDEBUG AssignMainAssist Leave \agLine#: ${Macro.CurLine}
     /return
 | -------------------------------------------------------------------------------------
@@ -8999,20 +8982,20 @@ Sub Main
 | ----------------------------------------------------------------------------
 | SUB: Event ImDead
 | ----------------------------------------------------------------------------
-    Sub Event_ImDead(IDMessage)
-        /if (${IAmDead}) /return
-        /echo I have died and the Angels wept.
-        /if (${GMailEvents.Find[dead]}) /call GmailSend "I have died. EQ Said ${IDMessage} Loc ${Me.X}  ${Me.X}"
-        /varset IAmDead 1
-        /call CombatReset 0 ImDead
-        /doevents flush ImDead
-        /if (${IAmABard}) {
-            /while (${Me.BardSongPlaying}) {
-                /if (${Twist}) /squelch /twist off
-                /stopsong
-                /delay 10
-            }
-        }
+	Sub Event_ImDead(IDMessage)
+	/if (${IAmDead}) /return
+	/echo I have died and the Angels wept.
+	/if (${GMailEvents.Find[dead]}) /call GmailSend "I have died. EQ Said ${IDMessage} Loc ${Me.X}  ${Me.X}"
+	/varset IAmDead 1
+	/call CombatReset 0 ImDead
+	/doevents flush ImDead
+	/if (${IAmABard}) {
+		/while (${Me.BardSongPlaying}) {
+			/if (${Twist}) /squelch /twist off
+			/stopsong
+			/delay 10
+		}
+	}
     /return
 
 	
@@ -9950,7 +9933,7 @@ Sub rev_FindSingleHeals
         }
         /call WriteBuffs
         /if (${AutoRezOn}) /call RezCheck
-        /call CanIDoStuff
+        /call DoMiscStuff
         /call CastMana WaitSubs
         /if (${PetOn}) /call DoPetStuff
         /if (${BuffsOn}) /call CheckBuffs 0
@@ -11181,9 +11164,9 @@ Sub rev_FindSingleHeals
 | -------------------------------------------------------------------------------------
 | SUB: Mash Buttons  (Heals, GHeals) 
 | /call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
-| /docommand /call NewCast ${MyTargetID} "DPS"
+| /docommand /call NewCast ${MyTargetID} "DPS"  
 | -------------------------------------------------------------------------------------    
-Sub NewCast(TarID, Array)
+Sub NewCast(TarID, Array, Spell)
 	/declare i int local
 	/declare SkipFlag    int      local 0
 	/varset CastResult CAST_NO_RESULT
@@ -11192,7 +11175,10 @@ Sub NewCast(TarID, Array)
 	/declare MashThisArg4 string local
 	/declare MaxTryNum int local 2
 	/declare TryNum int local 0
-	
+	|/if (!${Bool[${Spell}]}) {
+	|	/varset CastThis ${Spell}
+	|	/goto :castnow
+	|}
 	/if (${Target.ID}!=${TarID} && ${Spawn[id ${TarID}].ID}) /call CastTarget ${TarID}
 	/for i 1 to ${${Array}.Size}
 	/varset CastThis ${${Array}[${i}].Arg[1,|]}
@@ -11211,10 +11197,11 @@ Sub NewCast(TarID, Array)
 				}
 			}
 			|/varset MashThis ${${Array}[${i}].Arg[1,|]}
-			|/if (${CastThis.Equal[null]} || !${Bool[${CastThis} || !${Target.ID} || ${Target.Type.Equal[corpse]}) /return 
+			|/if (${CastThis.Equal[null]} || !${Bool[${CastThis}]} || !${Target.ID} || ${Target.Type.Equal[corpse]}) /return 
 			/if (!${Bool[${CastThis}]}) /return 
 			
 			/if (!${ConditionsOn} || ${If[${${Array}Cond[${i}]},1,0]}) {
+				:castnow
 				/if (${CastThis.Equal[command]}) {
 					/varset MashThisArg3 ${${Array}[${i}].Arg[3,|]}
 					/varset MashThisArg4 ${${Array}[${i}].Arg[4,|]}
@@ -11265,13 +11252,13 @@ Sub NewCast(TarID, Array)
 									/if (${Target.Type.Equal[npc]}) {
 										/Interrupt
 										/varset CastResult CAST_CANCELLED
-										/echo ${CIHSpell} interrupted. Target is an NPC
+										/echo ${CastThis} interrupted. Target is an NPC
 										/if (${Debug}) /echo CheckHP1: ${Target.Type}
 									}
 									/if (${Target.PctHPs}==100 || ${Spawn[${Target}].Type.Equal[Corpse]}) {
 										/Interrupt
 										/varset CastResult CAST_CANCELLED
-										/echo ${CIHSpell} interrupted. Target is above required ${SHealPct}% health. ${Target}
+										/echo ${CastThis} interrupted. Target is above required ${SHealPct}% health. ${Target}
 										/if (${Debug}) /echo CheckHP2: ${Target.PctHPs} ${SHealPct}
 									}
 									/delay 5
@@ -11290,12 +11277,12 @@ Sub NewCast(TarID, Array)
 				} else /if (!${FindItem[=${CastThis}].ID} && ${Me.Book[${CastThis}]} && !${Me.Gem[${CastThis}]}) {
 					/call CastMem "${CastThis}" ${Array}
 					/if (${Macro.Return.NotEqual[notready]} && ${Me.Gem[${CastThis}]}!=0) {
-						|/varset ReadyToCast 6
+						/varset ReadyToCast 6
 						/goto :Retry_Cast
 					}
 					/call CastWait "${CastThis}"
 				} else {
-					/echo in the cast garbage bin ${CastThis}
+					|/echo in the cast garbage bin ${CastThis}
 				}
 				/call DoCastingEvents
 				/varset CastResult ${castReturn}

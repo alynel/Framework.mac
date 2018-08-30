@@ -30,5 +30,5 @@
 	}
 	/call DoDebuffStuff ${MyTargetID}
 
-	
+	/if (!${CombatStart} && ${IAmABard}) /call DoBardStuff
 /return
