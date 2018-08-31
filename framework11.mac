@@ -1266,17 +1266,21 @@ Sub Main
     /while (1) {
 		/if (!${Role.Equal[manual]} && !${Select[${Zone.ID},345,344,202,203,279]}) {
 			/doevents
-			/if (${Me.Hovering}) /call DeathSub
+			|/if (${Me.Hovering}) /call DeathSub
 			/if (${ChainPull}!=2) {
 				/call CampfireBack
 				/if (${AFKToolsOn}) /call AFKTools
 				|/echo ${Math.Calc[(${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]}].Int} FT 1
 				|/echo ${Math.Calc[(${DPSOn}  && ${Target.ID}!=${MyTargetID})].Int} FT 2
 				|/echo ${Math.Calc[(!${MyTargetID} || ${Spawn[${MyTargetID}].Type.Equal[Corpse]})].Int} EG
-				/if (${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]} && (!${Me.Combat} || ${Target.ID}!=${MyTargetID} || !${Target.ID}) && (${Me.XTarget[1].ID} || ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]})) /call FindTarget 1
-				/if ((!${MyTargetID} || ${Spawn[${MyTargetID}].Type.Equal[Corpse]}) && (${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]})) /call FindTarget 2
+				/if (${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]} && (!${Me.Combat} || ${Target.ID}!=${MyTargetID} || ${MyTargetID}==0) && ${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]}) /call FindTarget 1
+				/if ((${MyTargetID}==0 || ${Spawn[corpse id ${MyTargetID}].ID}) && ${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]}) /call FindTarget 2
+				/if (!${Spawn[corpse id ${MyTargetID}].ID} && ${Spawn[targetable id ${MyTargetID}].ID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})) /call EngageTarget
+				
+				|/if (${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]} && (!${Me.Combat} || ${Target.ID}!=${MyTargetID} || !${Target.ID}) && (${Me.XTarget[1].ID} || ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]})) /call FindTarget 1
+				|/if ((!${MyTargetID} || ${Spawn[${MyTargetID}].Type.Equal[Corpse]}) && (${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]})) /call FindTarget 2
 				|/if ((!${MyTargetID} || ${Spawn[${MyTargetID}].Type.Equal[Corpse]}) && ((${Me.XTarget[1].ID} && ${SpawnCount[npc radius ${MeleeDistance} zradius 15 targetable playerstate 4]} ) || (${DPSOn}  && ${Target.ID}!=${MyTargetID}))) /call FindTarget 2
-				/if ((${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID}) && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})) /call EngageTarget
+				|/if ((${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID}) && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})) /call EngageTarget
 				
 				|/if (${DPSOn} || ${MeleeOn}) /call CheckForCombat 0 MainLoop1
 				/call _${Me.Class.ShortName}
@@ -3103,7 +3107,7 @@ Sub Main
         /if (${DebugCast}) /echo \atDEBUGCAST CastMem Enter \agLine#: ${Macro.CurLine}
         | Prevent tanks and heals trying to mem spells during combat.
         /if ((${Attacking} && ${MainAssist.Equal[${Me}]}) || (${HealsOn} && ${AggroTargetID} && ${sentFrom.NotEqual[Heal]} && !${Me.Mount.ID})) {
-            /echo Cannot mem a spell durring combat or while you have aggro. ${WhatMemSpell}
+            /echo Cannot mem a spell durring combat or while you have aggro. ${WhatMemSpell}  
             /return notready
         }
         /if (${Cursor.ID}) /call CheckCursor CastMem
@@ -3804,6 +3808,13 @@ Sub Main
 					/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
 					|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 					/return
+			}
+			
+			/if (${MezOn}) {
+				/echo checking Mez
+				/varset MezBroke 0
+				/doevents MezBroke
+				/if (!${MezBroke}) /call DoMezStuff
 			}
 			
             /if (${Buffs[${i}].Find[|0]}) /continue
@@ -5866,6 +5877,9 @@ Sub Main
                     /call CastWhat "${RezWith}" ${Target.ID} RezCheck 1
                     /if (${Macro.Return.Equal[CAST_SUCCESS]}) {
                         /call BroadCast ${IRCOn} ${EQBCOn} o "BATTLE REZZED =>> ${Group.Member[${i}]} <<="
+						/while (${Me.Casting.ID}) {
+							/delay 1
+						}
                         /varset BattleRezTimer${i} 15s
                         /squelch /target clear
                         /if (${RezWith.Find[Call of]}) /varset BattleRezTimer${i} 6m
@@ -5904,6 +5918,9 @@ Sub Main
                         /delay 10 ${Target.ID}==${RezID}
                         /if (${Target.Distance}<=${RezRadius}) {
                             /call CastWhat "${RezWith}" ${Target.ID} RezCheck 1
+							/while (${Me.Casting.ID}) {
+								/delay 1
+							}
                             /if (${Macro.Return.Equal[CAST_SUCCESS]}) {
                                 /call BroadCast ${IRCOn} ${EQBCOn} o "Rezzing =>> ${Target.CleanName} <<="
                                 /varset OOCRezTimer${RezID} 15s
@@ -10975,7 +10992,7 @@ Sub rev_FindSingleHeals
         }
         /target id ${Spawn[${NPCName}].ID}
         /delay 3s ${Target.ID}==${Spawn[${NPCName}].ID}
-        /if (${Target.Distance}>15 && ${Target.Distance}<50) {
+        /if (${Target.Distance}>15 && ${Target.Distance}<50)
             /moveto id  ${Spawn[${NPCName}].ID}
             /delay 250 ${MoveTo.Stopped}
         }
@@ -11325,6 +11342,8 @@ Sub rev_FindSingleHeals
 | /docommand /call NewCast ${MyTargetID} "DPS"  
 | -------------------------------------------------------------------------------------    
 Sub NewCast(TarID, Array, Spell)
+	/doevents 
+	
 	/declare i int local
 	/declare SkipFlag    int      local 0
 	/varset CastResult CAST_NO_RESULT
@@ -11333,8 +11352,7 @@ Sub NewCast(TarID, Array, Spell)
 	/declare MashThisArg4 string local
 	/declare MaxTryNum int local 2
 	/declare TryNum int local 0
-	/doevents 
-	/doevents flush
+	/declare castflag int local 0
 	
 	|/if (!${Bool[${Spell}]}) {
 	|	/varset CastThis ${Spell}
@@ -11343,150 +11361,181 @@ Sub NewCast(TarID, Array, Spell)
 
 	/if (${Target.ID}!=${TarID} && ${Spawn[id ${TarID}].ID}) /call CastTarget ${TarID}
 	/for i 1 to ${${Array}.Size}
-	/varset CastThis ${${Array}[${i}].Arg[1,|]}
-	|/echo ${CastThis} on ${TarID} from NewCast
-			/if (${Spawn[${TarID}].Type.Equal[Corpse]} || !${Spawn[${TarID}].ID}) {
-				/if (${DebugCombat}) /echo CombatCast: Return from CombatCast cause my target is a corpse or dead or DPSPaused ${DPSPaused}. \agLine#: ${Macro.CurLine}
-				/return
+		/varset CastThis ${${Array}[${i}].Arg[1,|]}
+		
+		|/echo ${CastThis} on ${TarID} from NewCast
+		/if (${Spawn[${TarID}].Type.Equal[Corpse]} || !${Spawn[${TarID}].ID}) {
+			/if (${DebugCombat}) /echo CombatCast: Return from CombatCast cause my target is a corpse or dead or DPSPaused ${DPSPaused}. \agLine#: ${Macro.CurLine}
+			/return
+		}
+		/if (${MezOn}) {
+			/varset MezBroke 0
+			/doevents MezBroke
+			/if (!${MezBroke}) {
+				/varset GoMByPass 1
+				/call DoMezStuff CombatCast
+				/varset GoMByPass 0
 			}
-			/if (${MezOn}) {
-				/varset MezBroke 0
-				/doevents MezBroke
-				/if (!${MezBroke}) {
-					/varset GoMByPass 1
-					/call DoMezStuff CombatCast
-					/varset GoMByPass 0
-				}
-			}
-			|/varset MashThis ${${Array}[${i}].Arg[1,|]}
-			|/if (${CastThis.Equal[null]} || !${Bool[${CastThis}]} || !${Target.ID} || ${Target.Type.Equal[corpse]}) /return 
-			/if (!${Bool[${CastThis}]}) /return 
-			
-			/if (!${ConditionsOn} || ${If[${${Array}Cond[${i}]},1,0]}) {
-				:castnow
-				/if (${CastThis.Equal[command]}) {
-					/varset MashThisArg3 ${${Array}[${i}].Arg[3,|]}
-					/varset MashThisArg4 ${${Array}[${i}].Arg[4,|]}
-					/if (${Bool[${MashThisArg4}]}) {
-                        /docommand /${MashThisArg3} ${MashThisArg4}
-                    } else {
-                        /docommand /${MashThisArg3}
-                    }
-					
-				} else /if (${CastThis.Find[script]}) {
-					/call script_${Me.Class.ShortName}
-					/echo ${CastThis} Script ${TarID} from NewCast
-				} else /if (${FindItem[=${CastThis}].ID} && ${Me.ItemReady[${CastThis}]}) {
-					/useitem "${CastThis}"
-					/call CastWait "${CastThis}"
-					/call DoCastingEvents
-					/varset CastResult ${castReturn}
-				
-					/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-						/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-						/echo ${CastResult} Returning
-						/return ${CastResult}
-					}
-				} else /if (${Me.AltAbility[${CastThis}]} && ${Me.AltAbilityReady[${CastThis}]} && ${Me.AltAbility[${CastThis}].Type}!=5 && ${CastThis.NotEqual[twincast]})  { 
-					/alt act ${Me.AltAbility[${CastThis}].ID}
-					/call CastWait "${CastThis}"
-					/if (${Me.AltAbilityReady[${CastThis}]}) {
-						/varset CastResult CAST_RECOVER
-					} else {
-						/varset CastResult CAST_SUCCESS
-					}
-					/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-						/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-						/echo ${CastResult} Returning
-						/return ${CastResult}
-					}
-					/echo ## Mashing >> ${CastThis} <<
-				} else /if (${Me.CombatAbility[${CastThis}]} && !${Me.CombatAbilityTimer[${CastThis}]} && ${Me.CombatAbilityReady[${CastThis}]} && ${Spell[${CastThis}].EnduranceCost}<${Me.Endurance}) {
-					/disc ${Me.CombatAbility[${Me.CombatAbility[${CastThis}]}].ID}
-					/call CastWait "${CastThis}"
-					/call DoCastingEvents
-					/varset CastResult ${castReturn}
-				
-					/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-						/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-						/echo ${CastResult} Returning
-						/return ${CastResult}
-					}
-					
-				} else /if (${Me.Ability[${CastThis}]} && ${Me.AbilityReady[${CastThis}]}) {
-					/doability "${CastThis}"
-					/call CastWait "${CastThis}"
-					/call DoCastingEvents
-					/varset CastResult ${castReturn}
-				
-					/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-						/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-						/echo ${CastResult} Returning
-						/return ${CastResult}
-					}
-					
-					
-				} else /if (${Me.SpellReady[${CastThis}]} && ${Me.Book[${CastThis}]} && ${Spell[${CastThis}].Mana}<${Me.CurrentMana}) {
-					
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call CastBard "${CastThis}" ${TarID} CastSpell
-						/return ${CastResult}  
-					} else /if (!${Target.CanSplashLand} && ${Spell[${CastThis}].TargetType.Equal[Free Target]}) {
-					   /echo Splash Spell will not cast at targets location. Skipping ${CastThis}
-					   /return
-					} else /if (${Me.Gem[${CastThis}]}) {
-						:Retry_Cast
-							/if (${Me.GemTimer[${CastThis}]}==0) {
-								/cast "${CastThis}"
-								/call DoCastingEvents 
-								/varcalc TryNum ${TryNum}+1
-								/while (${Me.Casting.ID} && ${CastResult.NotEqual[CAST_CANCELLED]}) {
-									/if (${CastingInterruptOn}) {
-										/if (${Array.Equal[Heals]}) {
-										   /call CastInteruptHeals "${CastThis}"
-										} else /if (${Select[${Array},dps,gom,burn]}>0) {
-										   /call CastInteruptDPS "${CastThis}"
-										} else /if (${Select[${Array},buffs,buffs-nomem]}>0) {
-										   /call CastInteruptBuffs "${CastThis}"
-										}
-									}
-									/delay 1
-								}
-								/call CastWait "${CastThis}"
-								/call DoCastingEvents 
-								
-								|/if (${Array.Equal[Pull]} && ${PullAggroTargetID}) /varset CastResult CAST_SUCCESS
-								/if (${CastResult.NotEqual[CAST_CANCELLED]} || ${CastResult.NotEqual[CAST_NO_RESULT]}) /varset CastResult ${castReturn}  
-							}
-							/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-								/echo ${CastResult} Returning ${CastThis} from ${Array}
-								/return ${CastResult}
-							}
-						/if (${TryNum}<=${MaxTryNum} && (${CastResult.Equal[CAST_RESTART]} || ${CastResult.Equal[CAST_STUNNED]} || ${CastResult.Equal[CAST_FIZZLE]} || ${CastResult.Equal[CAST_COLLAPSE]} || ${CastResult.Equal[CAST_INTERRUPTED]} || ${CastResult.Equal[CAST_RESISTED]})) /goto :Retry_Cast
-					} else {
-						/echo Skip Casting ${CastThis}. Spell Not Memed.
-						/varset CastResult CAST_NO_RESULT
-					}
-					
-				} else /if (!${FindItem[=${CastThis}].ID} && ${Me.Book[${CastThis}]} && !${Me.Gem[${CastThis}]} && ((${Attacking} && ${MainAssist.Equal[${Me}]}) || (${HealsOn} && ${AggroTargetID} && ${Array.NotEqual[Heal]} && !${Me.Mount.ID}))) {
-					/call CastMem "c" ${Array}
-					/if (${Macro.Return.NotEqual[notready]} && ${Me.Gem[${CastThis}]}!=0) {
-						/goto :Retry_Cast
-					}
-					/call CastWait "${CastThis}"
-					/call DoCastingEvents
-					/varset CastResult ${castReturn}
-				
-					/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-						/echo ${CastResult} Returning ${CastThis} from ${Array}
-						/return ${CastResult}
-					}
+		}
+		|/varset MashThis ${${Array}[${i}].Arg[1,|]}
+		|/if (${CastThis.Equal[null]} || !${Bool[${CastThis}]} || !${Target.ID} || ${Target.Type.Equal[corpse]}) /return 
+		/if (!${Bool[${CastThis}]}) /return 
+		
+		/if (!${ConditionsOn} || ${If[${${Array}Cond[${i}]},1,0]}) {
+			:castnow
+			/if (${CastThis.Equal[command]}) {
+				/varset castflag 1
+				/varset MashThisArg3 ${${Array}[${i}].Arg[3,|]}
+				/varset MashThisArg4 ${${Array}[${i}].Arg[4,|]}
+				/if (${Bool[${MashThisArg4}]}) {
+					/docommand /${MashThisArg3} ${MashThisArg4}
 				} else {
-					|/echo in the cast garbage bin ${CastThis}
+					/docommand /${MashThisArg3}
 				}
 				
+			} else /if (${CastThis.Find[script]}) {
+				/varset castflag 1
+				/call script_${Me.Class.ShortName}
+				/echo ${CastThis} Script ${TarID} from NewCast
+			} else /if (${FindItem[=${CastThis}].ID} && ${Me.ItemReady[${CastThis}]}) {
+				/varset castflag 1
+				/useitem "${CastThis}"
+				/call CastWait "${CastThis}"
+				/call DoCastingEvents
+				/varset CastResult ${castReturn}
+				/if (!${Me.ItemReady[${CastThis}]}) /varset CastResult CAST_SUCCESS
+				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
+					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/echo ${CastResult} Returning
+					/return ${CastResult}
+				}
+			} else /if (${Me.AltAbility[${CastThis}]} && ${Me.AltAbilityReady[${CastThis}]} && ${Me.AltAbility[${CastThis}].Type}!=5 && ${CastThis.NotEqual[twincast]})  { 
+				/varset castflag 1
+				/alt act ${Me.AltAbility[${CastThis}].ID}
+				/call CastWait "${CastThis}"
+				/if (${Me.AltAbilityReady[${CastThis}]}) {
+					/varset CastResult CAST_RECOVER
+				} else {
+					/varset CastResult CAST_SUCCESS
+				}
+				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
+					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/echo ${CastResult} Returning
+					/return ${CastResult}
+				}
+			} else /if (${Me.CombatAbility[${CastThis}]} && !${Me.CombatAbilityTimer[${CastThis}]} && ${Me.CombatAbilityReady[${CastThis}]} && ${Spell[${CastThis}].EnduranceCost}<${Me.Endurance}) {
+				/varset castflag 1
+				/disc ${Me.CombatAbility[${Me.CombatAbility[${CastThis}]}].ID}
+				/call CastWait "${CastThis}"
+				/call DoCastingEvents
+				/varset CastResult ${castReturn}
+				/if (!${Me.CombatAbility[${CastThis}]}) /varset CastResult CAST_SUCCESS
+				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
+					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/echo ${CastResult} Returning
+					/return ${CastResult}
+				}
+				
+			} else /if (${Me.Ability[${CastThis}]} && ${Me.AbilityReady[${CastThis}]}) {
+				/varset castflag 1
+				/doability "${CastThis}"
+				/call CastWait "${CastThis}"
+				/call DoCastingEvents
+				/varset CastResult ${castReturn}
+				/if (!${Me.AbilityReady[${CastThis}]}) /varset CastResult CAST_SUCCESS
+				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
+					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/echo ${CastResult} Returning
+					/return ${CastResult}
+				}
+				
+				
+			} else /if (${Me.SpellReady[${CastThis}]} && ${Me.Book[${CastThis}]} && ${Spell[${CastThis}].Mana}<${Me.CurrentMana}) {
+				/varset castflag 1
+				/if (${Me.Class.ShortName.Equal[BRD]}) {
+					/call CastBard "${CastThis}" ${TarID} CastSpell
+					/return ${CastResult}  
+				} else /if (!${Target.CanSplashLand} && ${Spell[${CastThis}].TargetType.Equal[Free Target]}) {
+				   /echo Splash Spell will not cast at targets location. Skipping ${CastThis}
+				   /return
+				} else /if (${Me.Gem[${CastThis}]}) {
+					
+					:Retry_Cast
+						/if (${Me.GemTimer[${CastThis}]}==0) {
+							/cast "${CastThis}"
+							/call DoCastingEvents 
+							/varcalc TryNum ${TryNum}+1
+							/while (${Me.Casting.ID} && ${CastResult.NotEqual[CAST_CANCELLED]}) {
+								/if (${CastingInterruptOn}) {
+									/if (${Array.Equal[Heals]}) {
+									   /call CastInteruptHeals "${CastThis}"
+									} else /if (${Select[${Array},dps,gom,burn]}>0) {
+									   /call CastInteruptDPS "${CastThis}"
+									} else /if (${Select[${Array},buffs,buffs-nomem]}>0) {
+									   /call CastInteruptBuffs "${CastThis}"
+									}
+								}
+								/delay 1
+							}
+							/call CastWait "${CastThis}"
+							/call DoCastingEvents 
+							
+							/if (${Array.Equal[Pull]} && ${PullAggroTargetID}) /varset CastResult CAST_SUCCESS
+							/if (${CastResult.NotEqual[CAST_CANCELLED]} || ${CastResult.NotEqual[CAST_NO_RESULT]}) /varset CastResult ${castReturn}  
+						}
+						/if (!${Me.SpellReady[${CastThis}]}) /varset CastResult CAST_SUCCESS
+						
+						/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
+							/echo ${CastResult} Returning ${CastThis} from ${Array}
+							/return ${CastResult}
+						}
+					/if (${TryNum}<=${MaxTryNum} && (${CastResult.Equal[CAST_RESTART]} || ${CastResult.Equal[CAST_STUNNED]} || ${CastResult.Equal[CAST_FIZZLE]} || ${CastResult.Equal[CAST_COLLAPSE]} || ${CastResult.Equal[CAST_INTERRUPTED]} || ${CastResult.Equal[CAST_RESISTED]})) /goto :Retry_Cast
+				} else {
+					/echo Skip Casting ${CastThis}. Spell Not Memed.
+					/varset CastResult CAST_NO_RESULT
+				}
+				
+			} else /if (!${FindItem[=${CastThis}].ID} && ${Me.Book[${CastThis}]} && !${Me.Gem[${CastThis}]} && ((${Attacking} && ${MainAssist.Equal[${Me}]}) || (${HealsOn} && ${AggroTargetID} && ${Array.NotEqual[Heal]} && !${Me.Mount.ID}))) {
+				/varset castflag 1
+				/call CastMem "c" ${Array}
+				/if (${Macro.Return.NotEqual[notready]} && ${Me.Gem[${CastThis}]}!=0) {
+					/goto :Retry_Cast
+				}
+				/call CastWait "${CastThis}"
+				/call DoCastingEvents
+				/varset CastResult ${castReturn}
+			
+				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
+					/echo ${CastResult} Returning ${CastThis} from ${Array}
+					/return ${CastResult}
+				}
+			} else {
+				|/echo in the cast garbage bin ${CastThis}
 			}
+			|/call CastWait "${CastThis}"
+			|/while (${Me.Casting.ID}) {
+			|	/delay 5
+			|}
+			
+			|/if (${Me.Casting.ID}) {
+			|	/while (${Me.Casting.ID}) {
+			|		/delay 1
+			|	}
+			|}
+			|/call DoCastingEvents
+			|/varset CastResult ${castReturn}
+			/if (${castflag} && (!${Me.AltAbilityReady[${CastThis}]} || !${Me.SpellReady[${CastThis}]} || !${Me.AbilityReady[${CastThis}]} || !${Me.CombatAbilityReady[${CastThis}]} || !${Me.ItemReady[${CastThis}]} )) {
+				/varset CastResult CAST_SUCCESS
+			}
+			|/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_NOTHOLD]}) {
+			|	/echo cycle:${i} ${CastResult} Returning ${CastThis} from ${Array} Target:${Spawn[id ${TarID}].CleanName}
+			|	/return 
+			|}
+			
+		}
+		/varset castflag 0
 	/next i
+	
 /return ${CastResult}
 | ----------------------------------------------------------------------------
 | SUB: DoCastingEvents 

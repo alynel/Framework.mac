@@ -13,19 +13,21 @@
  ***|
 Sub _war
 	|/echo in war sub
+	
 	/if (${ReturnToCamp} && ${Math.Distance[${CampYLoc},${CampXLoc}]}>20) {
 	   /varset ReturnToCamp 1
 	   /call DoWeMove 1 CheckForCombat
 	}
+	
 	/if (${Me.CombatState.Equal[COMBAT]} && ${Select[${Me.Class.ShortName},WAR,PAL,SHD]} && ${CombatStart} && !${Me.ActiveDisc.ID} && (${Target.Named} || ${Me.XTarget}>1) && ${Target.Distance}<75) {
-		|/echo defensive
+		/echo defensive
 		/call WarDefense
 	} else /if (${SpawnSort[1,asc,PctAggro,xtarhater].PctAggro} < 100 && ${CombatStart} && ${Select[${Role},pullertank,tank]}) {
-		|/echo aggro
+		/echo aggro
 		|/call Mod_AggroCheck
 		/call NewCast ${SpawnSort[1,asc,PctAggro,xtarhater].ID} "Aggro"
 	} else /if (${DPSOn} && ${CombatStart} && (${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID} || !${Me.Feigning})) {
-		|/echo combat cast
+		/echo combat cast
 		|/call CombatCast
 		|/call newcombatcast
 		/call NewCast ${MyTargetID} "DPS"
@@ -92,10 +94,12 @@ Sub WarDefense
 			/echo past defensive disc
 		}
 		
-		/if (${Me.ItemReady[chest]}) {
-			/useitem "${Me.Inventory[chest]}"
-			/return
-		}
+		|/if (${Me.ItemReady[chest]}) {
+		|	/useitem "${Me.Inventory[chest]}"
+		|	/delay 10 ${Me.ItemReady[chest]}
+		|	|/call CastWait "${Me.Inventory[chest]}"
+		|	/return
+		|}
 		
 		/echo past chest
 		

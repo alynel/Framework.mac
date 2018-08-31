@@ -506,9 +506,8 @@
 				/if (${Role.Equal[puller]} && ${ChainPull} && ${DPSOn}) /call newcombatcast
 			}   
 
-			
 
-			/if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused} || ${Me.Hovering} || ${Me.Feigning}) {
+			/if ((${Spawn[corpse id ${MyTargetID}].ID}) || (!${Spawn[targetable id ${MyTargetID}].ID}) || ${Me.Hovering} || ${Me.Feigning}) {
 				/call CombatReset 0 combat
 				/varset healcount 0
 				/break					
