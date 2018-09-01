@@ -254,7 +254,7 @@ Sub Main
 	/declare IniLevel            int      outer
 	/if (${Me.Level}>=110) {
 		/varset IniLevel 110
-	} /else /if (${Me.Level} >= 105) {
+	} else /if (${Me.Level} >= 105) {
 		/varset IniLevel 105
 	} else /if (${Me.Level}>=100) {
 		/varset IniLevel 100
