@@ -517,7 +517,7 @@
 		}
 		
 		/if (${cyclecount}>0) {
-				/echo CYCLES: ${cyclecount}
+				/if (${DebugFramework}) /echo CYCLES: ${cyclecount}
 				/varset cyclecount 0
 			}
 		/varset tmpHealOverride 99.99

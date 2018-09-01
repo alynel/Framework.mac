@@ -1849,7 +1849,7 @@ Sub Main
 				/if (${Spawn[${MyTargetID}].Distance}<${newMeleeDistance}) /break
 				/if (${Me.XTarget}==0) /break
 				/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} >= 1 && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-					/Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/if (${DebugFramework}) /Echo Heal from Precombat While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
 					/echo ${Macro.CurLine}
 					/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 
@@ -1979,7 +1979,7 @@ Sub Main
 				
 
 				/if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused} || ${Me.Hovering} || ${Me.Feigning}) {
-					/echo reseting combat
+					/if (${DebugFramework}) /echo reseting combat
 					/call CombatReset 0 combat
 					/break					
 					|/if (((!${Spawn[targetable id ${KillTargetID}].ID}) || ${Spawn[corpse id ${KillTargetID}].ID}) && ${KillTargetID}!=0) {
@@ -2005,7 +2005,7 @@ Sub Main
             /if (!${Me.Combat} && ${BeforeArray[1].NotEqual[null]}) /call BeforeAttack ${MyTargetID}
         }
 		/if (${cyclecount}>0) {
-			/echo CYCLES: ${cyclecount}
+			/if (${DebugFramework}) /echo CYCLES: ${cyclecount}
 			/varset cyclecount 0
 		}
 		/varset tmpHealOverride 99.99
@@ -3109,7 +3109,7 @@ Sub Main
         /if (${DebugCast}) /echo \atDEBUGCAST CastMem Enter \agLine#: ${Macro.CurLine}
         | Prevent tanks and heals trying to mem spells during combat.
         /if ((${Attacking} && ${MainAssist.Equal[${Me}]}) || (${HealsOn} && ${AggroTargetID} && ${sentFrom.NotEqual[Heal]} && !${Me.Mount.ID})) {
-            /echo Cannot mem a spell durring combat or while you have aggro. ${WhatMemSpell}  
+            /if (${DebugFramework}) /echo Cannot mem a spell durring combat or while you have aggro. ${WhatMemSpell}  
             /return notready
         }
         /if (${Cursor.ID}) /call CheckCursor CastMem
@@ -3137,7 +3137,7 @@ Sub Main
             /varset WaitTimerCM 350
             /while (!${Me.SpellReady[${WhatMemSpell}]} && ${WaitTimerCM}) {
 				/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-					/Echo Heal from CastMem While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/if (${DebugFramework}) /Echo Heal from CastMem While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
 					/echo ${Macro.CurLine}
 					/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
 					|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
@@ -3223,7 +3223,7 @@ Sub Main
                     /MemSpell ${i} "${SpellToMem}"
 					/while (${Me.Gem[${i}].Name.NotEqual[${SpellToMem}]}) {
 					/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-						/Echo Heal from CastMem While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+						/if (${DebugFramework}) /Echo Heal from CastMem While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
 						/echo ${Macro.CurLine}
 						/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 
@@ -3806,7 +3806,7 @@ Sub Main
            /doevents
 		   
 			/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,BST,PAL,RNG]} && (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.NotEqual[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName}Point}*.${tmpHealOverride}]}) || (${Spawn[${WorstHurt[both,1,200,TRUE]}].Type.Equal[Pet]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].Class.ShortName.NotEqual[Corpse]} && ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} <= ${Math.Calc[${PetPoint}*.${tmpHealOverride}]})) {
-					/Echo Heal from Buffs While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
+					/if (${DebugFramework}) /Echo Heal from Buffs While "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 0 G
 					/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
 					|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 					/return
@@ -11398,7 +11398,7 @@ Sub NewCast(TarID, Array, Spell)
 			} else /if (${CastThis.Find[script]}) {
 				/varset castflag 1
 				/call script_${Me.Class.ShortName}
-				/echo ${CastThis} Script ${TarID} from NewCast
+				/if (${DebugFramework}) /echo ${CastThis} Script ${TarID} from NewCast
 			} else /if (${FindItem[=${CastThis}].ID} && ${Me.ItemReady[${CastThis}]}) {
 				/varset castflag 1
 				/useitem "${CastThis}"
@@ -11407,8 +11407,8 @@ Sub NewCast(TarID, Array, Spell)
 				/varset CastResult ${castReturn}
 				/if (!${Me.ItemReady[${CastThis}]}) /varset CastResult CAST_SUCCESS
 				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-					/echo ${CastResult} Returning
+					/if (${DebugFramework}) /echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/if (${DebugFramework}) /echo ${CastResult} Returning
 					/return ${CastResult}
 				}
 			} else /if (${Me.AltAbility[${CastThis}]} && ${Me.AltAbilityReady[${CastThis}]} && ${Me.AltAbility[${CastThis}].Type}!=5 && ${CastThis.NotEqual[twincast]})  { 
@@ -11421,8 +11421,8 @@ Sub NewCast(TarID, Array, Spell)
 					/varset CastResult CAST_SUCCESS
 				}
 				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-					/echo ${CastResult} Returning
+					/if (${DebugFramework}) /echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/if (${DebugFramework}) /echo ${CastResult} Returning
 					/return ${CastResult}
 				}
 			} else /if (${Me.CombatAbility[${CastThis}]} && !${Me.CombatAbilityTimer[${CastThis}]} && ${Me.CombatAbilityReady[${CastThis}]} && ${Spell[${CastThis}].EnduranceCost}<${Me.Endurance}) {
@@ -11433,8 +11433,8 @@ Sub NewCast(TarID, Array, Spell)
 				/varset CastResult ${castReturn}
 				/if (!${Me.CombatAbility[${CastThis}]}) /varset CastResult CAST_SUCCESS
 				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-					/echo ${CastResult} Returning
+					/if (${DebugFramework}) /echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/if (${DebugFramework}) /echo ${CastResult} Returning
 					/return ${CastResult}
 				}
 				
@@ -11446,8 +11446,8 @@ Sub NewCast(TarID, Array, Spell)
 				/varset CastResult ${castReturn}
 				/if (!${Me.AbilityReady[${CastThis}]}) /varset CastResult CAST_SUCCESS
 				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-					/echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
-					/echo ${CastResult} Returning
+					/if (${DebugFramework}) /echo ## Mashing >> ${CastThis} << on ${TarID} from ${Array}
+					/if (${DebugFramework}) /echo ${CastResult} Returning
 					/return ${CastResult}
 				}
 				
@@ -11458,7 +11458,7 @@ Sub NewCast(TarID, Array, Spell)
 					/call CastBard "${CastThis}" ${TarID} CastSpell
 					/return ${CastResult}  
 				} else /if (!${Target.CanSplashLand} && ${Spell[${CastThis}].TargetType.Equal[Free Target]}) {
-				   /echo Splash Spell will not cast at targets location. Skipping ${CastThis}
+				   /if (${DebugFramework}) /echo Splash Spell will not cast at targets location. Skipping ${CastThis}
 				   /return
 				} else /if (${Me.Gem[${CastThis}]}) {
 					
@@ -11488,12 +11488,12 @@ Sub NewCast(TarID, Array, Spell)
 						/if (!${Me.SpellReady[${CastThis}]}) /varset CastResult CAST_SUCCESS
 						
 						/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-							/echo ${CastResult} Returning ${CastThis} from ${Array}
+							/if (${DebugFramework}) /echo ${CastResult} Returning ${CastThis} from ${Array}
 							/return ${CastResult}
 						}
 					/if (${TryNum}<=${MaxTryNum} && (${CastResult.Equal[CAST_RESTART]} || ${CastResult.Equal[CAST_STUNNED]} || ${CastResult.Equal[CAST_FIZZLE]} || ${CastResult.Equal[CAST_COLLAPSE]} || ${CastResult.Equal[CAST_INTERRUPTED]} || ${CastResult.Equal[CAST_RESISTED]})) /goto :Retry_Cast
 				} else {
-					/echo Skip Casting ${CastThis}. Spell Not Memed.
+					/if (${DebugFramework}) /echo Skip Casting ${CastThis}. Spell Not Memed.
 					/varset CastResult CAST_NO_RESULT
 				}
 				
@@ -11508,7 +11508,7 @@ Sub NewCast(TarID, Array, Spell)
 				/varset CastResult ${castReturn}
 			
 				/if (${CastResult.Equal[CAST_SUCCESS]} || ${CastResult.Equal[CAST_RESIST]} || ${CastResult.Equal[CAST_TAKEHOLD]}) {
-					/echo ${CastResult} Returning ${CastThis} from ${Array}
+					/if (${DebugFramework}) /echo ${CastResult} Returning ${CastThis} from ${Array}
 					/return ${CastResult}
 				}
 			} else {
