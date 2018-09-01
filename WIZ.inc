@@ -19,12 +19,12 @@ Sub _wiz
 	|	/call CombatPet
 	|} else 
 	/if (${HealsOn} && ${Me.PctHPs} <= ${Math.Calc[${${Me.Class.ShortName}Point}*.${tmpHealOverride}]}) {
-		/echo in heal
+		/if (${DebugFramework}) /echo in heal
 		/call newSingleHeal "${Me}" "PC" ${Me.PctHPs} 0 G
 	} else /if (${DPSOn} && ${CombatStart} && ${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} && ${Spawn[${MyTargetID}].ID} && !${Me.Feigning}) {
 		|/call CombatCast
 		|/call newcombatcast
-		/echo combatcast
+		/if (${DebugFramework}) /echo combatcast
 		/call NewCast ${MyTargetID} "DPS"
 	}
 	

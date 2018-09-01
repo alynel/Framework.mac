@@ -31,15 +31,15 @@
  *  NOTE:
  ***|
  sub script_ber
-	/echo in ber discs
+	/if (${DebugFramework}) /echo in ber discs
 	/if (${Me.CombatAbilityReady[${Spell[Disconcerting Discipline].RankName}]}) {
-		/echo 1
+		/if (${DebugFramework}) /echo 1
 		/call CastWhat "${Spell[Disconcerting Discipline].RankName}" ${Spawn[${MyTargetID}].ID} DPS 0
 	} else /if (${Me.ItemReady[${epicaxe}]}) {
-		/echo 2
+		/if (${DebugFramework}) /echo 2
 		/call CastWhat "${epicaxe}" ${Spawn[${MyTargetID}].ID} DPS 0
 	} else /if (${Me.AltAbilityReady[Focused Furious Rampage]}) {
-		/echo 3
+		/if (${DebugFramework}) /echo 3
 		/call CastWhat "${Spell[Brutal Discipline].RankName}" ${Spawn[${MyTargetID}].ID} DPS 0
 		/alt act 379
 		/alt act 465 
@@ -48,16 +48,16 @@
 		/alt act 961 
 		/alt act 7019 
 	} else /if (${Me.CombatAbilityReady[${Spell[Cleaving Acrimony Discipline].RankName}]}) {
-		/echo 4
+		/if (${DebugFramework}) /echo 4
 		/call CastWhat "${Spell[Cleaving Acrimony Discipline].RankName}" ${Spawn[${MyTargetID}].ID} DPS 0
 		/alt act 1501
 		/alt act 610
 		/useitem "Cohort's Warmonger Coat"
 	} else /if (${Me.CombatAbilityReady[${Spell[Frenzied Resolve Discipline].RankName}]}) {
-		/echo 5
+		/if (${DebugFramework}) /echo 5
 		/call CastWhat "${Spell[Frenzied Resolve Discipline].RankName}" ${Spawn[${MyTargetID}].ID} DPS 0
 	} else /if (${Me.CombatAbilityReady[${Spell[Avenging Flurry Discipline].RankName}]}) {
-		/echo 6
+		/if (${DebugFramework}) /echo 6
 		/call CastWhat "${Spell[Avenging Flurry Discipline].RankName}" ${Spawn[${MyTargetID}].ID} DPS 0
 	} 
 /return

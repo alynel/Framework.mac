@@ -12,7 +12,7 @@
  *  NOTE:
  ***|
 Sub _MNK
-	/echo in class sub
+	/if (${DebugFramework}) /echo in class sub
 	/if (${HealsOn} && ${Me.PctHPs} <= ${Math.Calc[${${Me.Class.ShortName}Point}*.${tmpHealOverride}]}) {
 		/call newSingleHeal "${Me}" "PC" ${Me.PctHPs} 0 G
 	} else /if (${DPSOn} && ${CombatStart} && ${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} && ${Spawn[${MyTargetID}].ID} && !${Me.Feigning}) {

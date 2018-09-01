@@ -236,6 +236,7 @@ Sub Main
     /declare DebugPet               int         outer       0
     /declare DebugPull              int         outer       0
     /declare DebugRK                int         outer       0
+	/declare DebugFramework         int         outer       0
     /declare CampXLoc               int         outer       ${Me.X}
     /declare CampYLoc               int         outer       ${Me.Y}
     /declare CampZLoc               int         outer       ${Me.Z}
@@ -337,6 +338,7 @@ Sub Main
         /squelch /alias /debugmove      /togglevariable DebugMove
         /squelch /alias /debugpull      /togglevariable DebugPull
         /squelch /alias /debugrk        /togglevariable DebugRK
+        /squelch /alias /debugfw        /togglevariable DebugFramework
         /squelch /alias /dpsinterval    /changevarint DPS DPSInterval
         /squelch /alias /dpsmeter       /togglevariable DPSMeter
         /squelch /alias /dpson          /changevarint DPS DPSOn

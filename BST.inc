@@ -12,7 +12,7 @@
  *  NOTE:
  ***|
  Sub _BST
-	/echo in class sub
+	/if (${DebugFramework}) /echo in class sub
     /if (${Spawn[${MyTargetID}].PctHPs}<=${PetAssistAt} && ${PetOn} && ${PetCombatOn} && !${Me.Pet.Combat}) {
 		/call CombatPet
 	}
@@ -20,7 +20,7 @@
 		|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 		/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
 	} else /if (${DPSOn} && ${CombatStart} && ${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} && ${Spawn[${MyTargetID}].ID} && !${Me.Feigning}) {
-		/echo in combat
+		/if (${DebugFramework}) /echo in combat
 		|/call CombatCast
 		|/call newcombatcast
 		/call NewCast ${MyTargetID} "DPS"
