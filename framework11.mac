@@ -9420,7 +9420,7 @@ Sub Main
         | Move Array to Temp Array leaving out useless entries.
         /for m 1 to ${${ArrayName}.Size}
             /if (${TempArray[${m}].Length} && !${TempArray[${m}].Find[|0]} && ${TempArray[${m}].NotEqual[null]}) {
-                /varcalc NewArrayPos ${NewArrayPos}+1
+                /varcalc NewArrayPos ${NewArrayPos}+1	
                 /varset TArray2[${NewArrayPos}] ${TempArray[${m}]}
                 /varcalc NewArraySize ${NewArraySize}+1
                 /if (${CArrayName.NotEqual[null]} && ${m}!=${NewArrayPos}) {
@@ -11206,19 +11206,134 @@ Sub rev_FindSingleHeals
         }
     /if (${Debug}) /echo \atDEBUGBUFFS Roguestuff Leave \agLine#: ${Macro.CurLine}
     /return
+	
+	Sub AddGem(GemNum, SpellToMem)
+		/declare ii int local
+		
+		| Skip if we don't have the spell, or we have it as an AA
+		/if (!${Me.Book[${SpellToMem}]} || ${Me.AltAbility[${SpellToMem}]}) /return FALSE
+		
+		| Skip if we've already got it memmed in a previous slot
+		/if (${Me.Gem[${SpellToMem}]} && ${Me.Gem[${SpellToMem}]} < ${GemNum}) /return FALSE
+		
+		| ${Me.NumGems} is wrong, only goes up to 12 so check here if we have 13 slots
+		/if (${GemNum} > ${If[${Me.AltAbility[Mnemonic Retention].Rank}==5,13,${Me.NumGems}]}) {
+			/echo Gems full, unable to mem ${SpellToMem}
+			/return FALSE
+		}
+		
+		| Blindly copied from Bind_MemMySpells
+		/if (${Int[${Me.Gem[${SpellToMem}]}]}>0 && ${Int[${Me.Gem[${SpellToMem}]}]}!=${GemNum}) {
+			/varcalc ii ${Int[${Me.Gem[${SpellToMem}]}]}-1
+			/notify CastSpellWnd CSPW_Spell${ii} rightmouseup
+			/delay 20 ${Int[${Me.Gem[${SpellToMem}]}]}==0
+		}
+		/if (!${Int[${Me.Gem[${GemNum}].Name.Length}]} || ${Me.Gem[${GemNum}].Name.NotEqual[${SpellToMem}]}) {
+			/varset DontMoveMe 1
+			/while (${Me.Moving}) {
+				/delay 5
+			}
+			/echo Meming ${SpellToMem} in slot ${GemNum}
+			/if (${Stick.Active}) {
+				/stick pause
+				/MemSpell ${GemNum} "${SpellToMem}"
+				/delay 90 ${Me.Gem[${GemNum}].Name.Equal[${SpellToMem}]}
+				/stick unpause
+			} else {
+				/MemSpell ${GemNum} "${SpellToMem}"
+				/delay 90 ${Me.Gem[${GemNum}].Name.Equal[${SpellToMem}]}
+			}
+			/varset DontMoveMe 0
+		}
+		
+	/return TRUE
 | ----------------------------------------------------------------------------
 | SUB: LoadSpellSet
 | ----------------------------------------------------------------------------
     Sub LoadSpellSet
         /if (${Debug}) /echo \atDEBUGBUFFS LoadSpellSet Enter \agLine#: ${Macro.CurLine}   
-        /declare GemNum      int local
-        /declare ValidSpells int local 0
+        /declare GemNum                    int    local
+        /declare ValidSpells               int    local 0
+		/declare i                         int    local
+		/declare j                         int    local
+		/declare sortedBuffs[${BuffsSize}] string local
+		/declare tempBuff                  string local
             
         /if (${Debug}) /echo \atDEBUG Sub LoadSpellSet LoadSpellSet=(${LoadSpellSet}) \agLine#: ${Macro.CurLine}
         /if (${LoadSpellSet}==1) {
             /if (${Debug}) /echo \atDEBUG Sub LoadSpellSet SpellSetName=(${SpellSetName}) \agLine#: ${Macro.CurLine}
             /echo Memming spellset (${SpellSetName}).
             /memspellset ${SpellSetName}    
+		} else /if (${LoadSpellSet}==3) {
+			| Auto mem spells based on config in ini, in order of priority: Mez > Heals > Aggro > Cures > DPS > Burn > Buffs
+			| Buffs will be memmed in order of cooldown, so things with a long cooldown will be memmed first and hopefully they get a permanent gem slot
+			/varset GemNum 1
+			
+			/if (${MezOn}==1 || ${MezOn}==3) {
+				/call AddGem ${GemNum} "${MezAESpell.Arg[1,|]}"
+				/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+			}
+			
+			/if (${MezOn}==1 || ${MezOn}==2) {
+				/call AddGem ${GemNum} "${MezSpell.Arg[1,|]}"
+				/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+			}
+			
+			/if (${HealsOn}) {
+				/for i 1 to ${HealsSize}
+					/call AddGem ${GemNum} "${Heals[${i}].Arg[1,|]}"
+					/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+				/next i
+			}
+			
+			/if (${AggroOn}) {
+				/for i 1 to ${AggroSize}
+					/call AddGem ${GemNum} "${Aggro[${i}].Arg[1,|]}"
+					/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+				/next i
+			}
+			
+			/if (${CuresOn}) {
+				/for i 1 to ${CuresSize}
+					/call AddGem ${GemNum} "${Cures[${i}].Arg[1,|]}"
+					/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+				/next i
+			}
+			
+			/if (${DPSOn}) {
+				/for i 1 to ${DPSSize}
+					/call AddGem ${GemNum} "${DPS[${i}].Arg[1,|]}"
+					/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+				/next i
+			}
+			
+			/for i 1 to ${BurnSize}
+				/call AddGem ${GemNum} "${Burn[${i}].Arg[1,|]}"
+					/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+			/next i
+			
+			/if (${BuffsOn}) {
+				| Copy Buffs to sortedBuffs, and (bubble...) sort by cooldown descending then duration ascending. Spells with a duration of 0 or 1 are sorted to the bottom
+				/for i 1 to ${BuffsSize}
+					/varset sortedBuffs[${i}] ${Buffs[${i}].Arg[1,|]}
+				/next i
+				
+				/for i 1 to ${BuffsSize}
+					/for j 1 to ${BuffsSize}
+						/if (${Spell[${sortedBuffs[${j}]}].RecastTime} < ${Spell[${sortedBuffs[${i}]}].RecastTime} || (${Spell[${sortedBuffs[${j}]}].RecastTime} == ${Spell[${sortedBuffs[${i}]}].RecastTime} && ${Spell[${sortedBuffs[${i}]}].Duration} > 1 && ${Spell[${sortedBuffs[${j}]}].Duration} > ${Spell[${sortedBuffs[${i}]}].Duration})) {
+							/varset tempBuff ${sortedBuffs[${j}]}
+							/varset sortedBuffs[${j}] ${sortedBuffs[${i}]}
+							/varset sortedBuffs[${i}] ${tempBuff}
+						}
+					/next j
+				/next i
+				
+				/for i 1 to ${BuffsSize}
+					/call AddGem ${GemNum} "${sortedBuffs[${i}].Arg[1,|]}"
+					/if (${Macro.Return}) /varset GemNum ${Math.Calc[${GemNum}+1]}
+				/next i
+			}
+			
         } else {       
             |---Test to see if we have MySpells section defined in INI or not.
             /for GemNum 1 to 13
