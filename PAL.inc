@@ -45,19 +45,16 @@ Sub _pal
 		/call NewCast ${Spawn[${WorstHurt[both,1,200,TRUE]}].ID} "Heals"
 		|/call newSingleHeal "${Spawn[${WorstHurt[both,1,200,TRUE]}].CleanName}" "${Spawn[${WorstHurt[both,1,200,TRUE]}].Type}" ${Spawn[${WorstHurt[both,1,200,TRUE]}].PctHPs} 1 G
 		|(${Group.Member[${i}].Distance}<=200&& ${Group.Member[${i}].PctHPs}<100 && !${Group.Member[${i}].Hovering} && ${Group.Member[${i}].Type.NotEqual[Corpse]})
-	}  else /if (${SpawnSort[1,asc,PctAggro,xtarhater].PctAggro} < 100 && ${CombatStart} && ${Select[${Role},pullertank,tank]}) {
+	} else /if (${SpawnSort[1,asc,PctAggro,xtarhater].PctAggro} < 100 && ${CombatStart} && ${Select[${Role},pullertank,tank]}) {
 		/echo aggro
-		/call Mod_AggroCheck
-	} else {
-		|/echo In Clr sub attacks
-		|/if (${CuresOn}) /call CheckCures   
-		/if (${CombatStart} && (${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID} || !${Me.Feigning})) {
-			|/if (${MercOn} && !${MercAssisting} && ${MyTargetID} && ${Mercenary.State.Equal[Active]}) /call MercsDoWhat
-			|/if (${DPSOn} && (!${Role.Equal[puller]} || !${ChainPull})) /call Mod_CombatCast
-			|/if (${DPSOn} && (!${Role.Equal[puller]} || !${ChainPull})) /call CombatCast
-			|/if (${DPSOn} && (!${Role.Equal[puller]} || !${ChainPull})) /call newcombatcast
-			/call NewCast ${MyTargetID} "DPS"
-		}
+		|/call Mod_AggroCheck
+		/call NewCast ${SpawnSort[1,asc,PctAggro,xtarhater].ID} "Aggro"
+	} else /if (${DPSOn} && ${CombatStart} && (${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID} || !${Me.Feigning})) {
+		/echo combat cast
+		/call NewCast ${MyTargetID} "DPS"
+		|/call CombatCast
+		|/call newcombatcast
+		
 	}
 	/if (${AutoRezOn}) /call RezCheck
 /return 

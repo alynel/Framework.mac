@@ -1066,7 +1066,7 @@ Sub Main
        /varset PullLevel off
     }
     | Checking your ini file for errors
-    /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.ID},Zone].Length}) {
+    /if (!${Ini["KissAssist_Buffs.ini",${Me.ID},Zone].Length}) {
         /echo Checking your ini file for errors. 
         /delay 10
         /call ScanIni
@@ -1262,10 +1262,9 @@ Sub Main
         }
     }
     /if (${LoadSpellSet}) /call LoadSpellSet
-    /if (${Bool[${Plugin[MQ2Map]}]}) {
+    /if (${Role.Find[puller]} && ${Bool[${Plugin[MQ2Map]}]}) {
         /squelch /mapfilter CastRadius color 25 225 25
         /squelch /mapfilter SpellRadius color 25 25 225
-		/squelch /mapfilter SpellRadius ${MaxRadius}
     }
     /call WinTitle
 	
@@ -1281,6 +1280,7 @@ Sub Main
 |/echo ${Math.Calc[${MyTargetID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].PctHPs}<=${AssistAt} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}<${MeleeDistance} && (!${Target.Mezzed.ID} || ${Select[${Role},manual,petassist,tank,pettank,puller,pullertank,pullerpettank,hunter,hunterpettank,offtank]})].Int}
     /while (1) {
 		/if (!${Role.Equal[manual]} && !${Select[${Zone.ID},345,344,202,203,279]}) {
+			|/echo in mainloop
 			/doevents
 			|/if (${Me.Hovering}) /call DeathSub
 			/if (${ChainPull}!=2) {
@@ -1444,7 +1444,7 @@ Sub Main
                     /varset ParseDPSTimer ${PParam${ipa}}
                 }
                 /if (${PParam${i}.Equal[scanini]}) {
-                    /ini FRAMEWORK/${MacroName}_Buffs.ini ${Me.ID} Zone NULL
+                    /ini "KissAssist_Buffs.ini" ${Me.ID} Zone NULL
                 }
                 /varset ipa 0
                 /varset ipb 0
@@ -3694,6 +3694,7 @@ Sub Main
                     /if (!${Me.Mount.ID} && ${Me.Standing} && !${Me.Moving}) /sit
                     /if (${Debug}) /echo \atDEBUG ${MedStat} ${MedStat1} ${MedStat2} \agLine#: ${Macro.CurLine}
                     /delay 5
+					/call CheckForCombat 1 DoWeMed2
                     /if (!${MedCombat}) {
                         /call WaitSubs
                         /if (${AggroTargetID}) {
@@ -3971,8 +3972,8 @@ Sub Main
                 /if (${Spawn[=${MainAssist}].Distance}<=${SpellRange} && ${Spawn[=${MainAssist}].ID} && ${Buff${i}GM7}==0) {
                     /if (${DebugBuffs}) /echo \atDEBUGBUFFS Cast buffs with MA tag ${Buffs[${i}]} \agLine#: ${Macro.CurLine}
                     | Check buffs in file to see if MA has buff or its blocked
-                    /if (${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Spawn[${MainAssistType} ${MainAssist}].ID},"Blockedbuffs"].Find[${BuffToCheck}]}) /continue
-                    /if (${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Spawn[${MainAssistType} ${MainAssist}].ID},"Buffs"].Find[${BuffToCheck}]}) /continue
+                    /if (${Ini["KissAssist_Buffs.ini",${Spawn[${MainAssistType} ${MainAssist}].ID},"Blockedbuffs"].Find[${BuffToCheck}]}) /continue
+                    /if (${Ini["KissAssist_Buffs.ini",${Spawn[${MainAssistType} ${MainAssist}].ID},"Buffs"].Find[${BuffToCheck}]}) /continue
                     | If its a group spell cast on mercs - owner
                     /if (${Spawn[=${MainAssist}].Type.Equal[mercenary]} && ${Spell[${SpellToCast}].TargetType.Find[group v]}) { 
                         /varset MATargetID ${Spawn[=${MainAssist}].Owner.ID}
@@ -4329,7 +4330,7 @@ Sub Main
         /declare k int local
         /declare l int local
         | Assign var IniIDList all the spawn ids from buff ini file 2345|2195|2391| etc
-        /declare IniIDList string local ${Ini[FRAMEWORK/${MacroName}_Buffs.ini
+        /declare IniIDList string local ${Ini["KissAssist_Buffs.ini"]}
         /declare IniIDCount int local ${Math.Calc[${IniIDList.Count[|]}-1]}
         /declare IniBuffCount int local 0
         /declare IniBBuffList string local
@@ -4368,12 +4369,12 @@ Sub Main
                 }
                 /if (${DebugBuffs}) /echo \atDEBUGBUFFS CheckINIBuffs  IniBuffCheck 2: ${Spawn[${IniIDList.Arg[${k},|]}].Name} ${IniIDList.Arg[${k},|]} ${IniTempBuff} ${BuffName} \agLine#: ${Macro.CurLine}
                 | Assign var IniBBuffList blocked buffs list from ini file
-                /varset IniBBuffList ${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${IniIDList.Arg[${k},|]},"Blockedbuffs"]}
+                /varset IniBBuffList ${Ini["KissAssist_Buffs.ini",${IniIDList.Arg[${k},|]},"Blockedbuffs"]}
                 | If the current buff is on the blocked buff list skip it.
                 /if (${DebugBuffs}) /echo \atDEBUGBUFFS CheckINIBuffs  IniBuffCheck 3: ${IniBBuffList.Find[${IniTempBuff}]} Buff blocked? \agLine#: ${Macro.CurLine}
                 /if (${IniBBuffList.Find[${IniTempBuff}]}) /continue
                 | Assign var IniBuffList buffs list from ini file
-                /varset IniBuffList ${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${IniIDList.Arg[${k},|]},"Buffs"]}
+                /varset IniBuffList ${Ini["KissAssist_Buffs.ini",${IniIDList.Arg[${k},|]},"Buffs"]}
                 | If current buff is on the buff list skip it
                 /if (${DebugBuffs}) /echo \atDEBUGBUFFS CheckINIBuffs IniBuffCheck 4: ${IniTempBuff} ${IniBuffList.Find[${IniTempBuff}]} \agLine#: ${Macro.CurLine}
                 /if (${IniBuffList.Find[${IniTempBuff}]}) /continue
@@ -9372,7 +9373,7 @@ Sub Main
         /declare BArrayCount int    local 1
         /declare TempSwapHold       string  local
         /declare Swapped            int     local 1
-        /if (${Select[${CArrayName},NULL,GoMCond,HealsCond,DPSCond,BurnCond,GHCond,SHCond,MashCond,WeaveCond,AggroCond,rev_SHCond]}==0) {
+        /if (${Select[${CArrayName},NULL,GoMCond,HealsCond,DPSCond,BurnCond,GHCond,SHCond,MashCond,WeaveCond,AggroCond]}==0) {
             /echo ${CArrayName} is an invalid Conditional. Supported Conditionals for DPS, GOM, Burn, Heals, Mash, Weave and Aggro. 
             /beep
         }
@@ -9827,11 +9828,11 @@ Sub rev_FindSingleHeals
         /declare Writebufflist string local
         /call CleanBuffsFile
         | Write day of the month and hour. Entry will be deleted if more than a hour old
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Spawn[mercenary ${MyMerc}].ID},Day].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Spawn[mercenary ${MyMerc}].ID}" Day "${Time.Day}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Spawn[mercenary ${MyMerc}].ID},Hour].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Spawn[mercenary ${MyMerc}].ID}" Hour "${Time.Hour}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Spawn[mercenary ${MyMerc}].ID},Zone].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Spawn[mercenary ${MyMerc}].ID}" Zone "${Zone.ID}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Spawn[mercenary ${MyMerc}].ID},Buffs].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Spawn[mercenary ${MyMerc}].ID}" Buffs
-         | Write all current buffs to Kissassist_Buffs.ini file
+        /if (!${Ini["KissAssist_Buffs.ini",${Spawn[mercenary ${MyMerc}].ID},Day].Length}) /ini "KissAssist_Buffs.ini" "${Spawn[mercenary ${MyMerc}].ID}" Day "${Time.Day}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Spawn[mercenary ${MyMerc}].ID},Hour].Length}) /ini "KissAssist_Buffs.ini" "${Spawn[mercenary ${MyMerc}].ID}" Hour "${Time.Hour}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Spawn[mercenary ${MyMerc}].ID},Zone].Length}) /ini "KissAssist_Buffs.ini" "${Spawn[mercenary ${MyMerc}].ID}" Zone "${Zone.ID}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Spawn[mercenary ${MyMerc}].ID},Buffs].Length}) /ini "KissAssist_Buffs.ini" "${Spawn[mercenary ${MyMerc}].ID}" Buffs
+        | Write all current buffs to Kissassist_Buffs.ini file
         /target id ${Spawn[mercenary ${MyMerc}].ID}
         /delay 20
         /for i 1 to 15
@@ -9846,7 +9847,7 @@ Sub rev_FindSingleHeals
                 /varset Writebufflist ${Writebufflist}|${BuffList}
             }
         /next i
-        /ini FRAMEWORK/${MacroName}_Buffs.ini "${Spawn[mercenary ${MyMerc}].ID}" Buffs "${Writebufflist}"
+        /ini "KissAssist_Buffs.ini" "${Spawn[mercenary ${MyMerc}].ID}" Buffs "${Writebufflist}"
         /delay 15
         /varset WriteBuffsMercTimer 30s
         /if (${DebugBuffs}) /echo \atDEBUGBUFFS WriteBuffsMerc Leave \agLine#: ${Macro.CurLine}
@@ -9869,11 +9870,11 @@ Sub rev_FindSingleHeals
         /declare Writebufflist string local
         /call CleanBuffsFile
         | Write day of the month and hour. Entry will be deleted if more than a hour old
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.Pet.ID},Day].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.Pet.ID}" Day "${Time.Day}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.Pet.ID},Hour].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.Pet.ID}" Hour "${Time.Hour}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.Pet.ID},Zone].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.Pet.ID}" Zone "${Zone.ID}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.Pet.ID},Buffs].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.Pet.ID}" Buffs
-           | Write all current buffs to Kissassist_Buffs.ini file
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.Pet.ID},Day].Length}) /ini "KissAssist_Buffs.ini" "${Me.Pet.ID}" Day "${Time.Day}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.Pet.ID},Hour].Length}) /ini "KissAssist_Buffs.ini" "${Me.Pet.ID}" Hour "${Time.Hour}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.Pet.ID},Zone].Length}) /ini "KissAssist_Buffs.ini" "${Me.Pet.ID}" Zone "${Zone.ID}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.Pet.ID},Buffs].Length}) /ini "KissAssist_Buffs.ini" "${Me.Pet.ID}" Buffs
+        | Write all current buffs to Kissassist_Buffs.ini file
         /target id ${Me.Pet.ID}
         /delay 20
         /for i 1 to 50
@@ -9888,7 +9889,7 @@ Sub rev_FindSingleHeals
                 /varset Writebufflist ${Writebufflist}|${BuffList}
             }
         /next i
-        /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.Pet.ID}" Buffs "${Writebufflist}"
+        /ini "KissAssist_Buffs.ini" "${Me.Pet.ID}" Buffs "${Writebufflist}"
         /delay 15
         | Open Blocked Pet Buffs window temporarily to read blocked buffs
         /if (!${Window[BlockedPetBuffWnd].Open} && !${BPBWindowOpen}) {
@@ -9903,7 +9904,7 @@ Sub rev_FindSingleHeals
                  /varset Blockedbufflist ${Blockedbufflist}|${Blockedbuff}
             }
         /next k
-        /if (${Blockedbufflist.Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.Pet.ID}" Blockedbuffs "${Blockedbufflist}"
+        /if (${Blockedbufflist.Length}) /ini "KissAssist_Buffs.ini" "${Me.Pet.ID}" Blockedbuffs "${Blockedbufflist}"
         /if (${Window[BlockedPetBuffWnd].Open}) /windowstate BlockedPetBuffWnd close
         /varset WriteBuffsPetTimer 30s
         /if (${DebugBuffs}) /echo \atDEBUGBUFFS WriteBuffsPet Leave \agLine#: ${Macro.CurLine}
@@ -9914,7 +9915,7 @@ Sub rev_FindSingleHeals
     Sub CleanBuffsFile
         /if (${CleanBuffsTimer}) /return
         /declare i int local
-        /declare SectionList string local FRAMEWORK/${MacroName}_Buffs.ini
+        /declare SectionList string local ${Ini["KissAssist_Buffs.ini"]}
         /declare SectionListCount int local ${SectionList.Count[|]}
         /if (${SectionListCount}==0) /return
         /varcalc SectionListCount ${SectionListCount}-1
@@ -9922,11 +9923,11 @@ Sub rev_FindSingleHeals
         /for i 1 to ${SectionListCount}
             /varset SectionName ${SectionList.Arg[${i},|]}
             /if (${DebugBuffs}) /echo \atDEBUGBUFFS CleanBuffsFile ${i} ${SectionName} ${Math.Calc[${Ini["KissAssist_Buffs.ini",${SectionName},Day]}-${Time.Day}]} ${Math.Calc[${Time.Hour}-${Ini["KissAssist_Buffs.ini",${SectionName},Hour]}]} Day: ${Time.Day} Hour: ${Time.Hour} \agLine#: ${Macro.CurLine}
-            /if (${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${SectionName},Day].NotEqual[${Time.Day}]}) {
-                /ini FRAMEWORK/${MacroName}_Buffs.ini ${SectionName} NULL NULL
+            /if (${Ini["KissAssist_Buffs.ini",${SectionName},Day].NotEqual[${Time.Day}]}) {
+                /ini "KissAssist_Buffs.ini" ${SectionName} NULL NULL
                 /continue
             }
-            /if (${Math.Calc[${Time.Hour}-${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${SectionName},Hour]}]}!=0) /ini FRAMEWORK/${MacroName}_Buffs.ini ${SectionName} NULL NULL
+            /if (${Math.Calc[${Time.Hour}-${Ini["KissAssist_Buffs.ini",${SectionName},Hour]}]}!=0) /ini "KissAssist_Buffs.ini" ${SectionName} NULL NULL
         /next i
         /varset CleanBuffsTimer 10m
     /return
@@ -10008,14 +10009,14 @@ Sub rev_FindSingleHeals
         /if (${IAmDeBuffed} && !${NeedCuring}) {
             /varset NeedCuring 1
             /varset DebuffList ${IAmDeBuffed}|${Int[${Me.Poisoned.ID}]}|${Int[${Me.Diseased.ID}]}|${Int[${Me.Cursed.ID}]}|${Int[${Me.Corrupted.ID}]}
-            /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Debuffs "${DebuffList}"
+            /ini "KissAssist_Buffs.ini" "${Me.ID}" Debuffs "${DebuffList}"
             /delay 10
             /if (${DebugHeal}) /echo \amDEBUGHEALS WriteDebuffs Writing debuffs to ini file \agLine#: ${Macro.CurLine}
         }
         /if (!${IAmDeBuffed} && ${NeedCuring}) {
             /varset NeedCuring 0
             /varset DebuffList 
-            /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Debuffs "${DebuffList}"
+            /ini "KissAssist_Buffs.ini" "${Me.ID}" Debuffs "${DebuffList}"
             /delay 10
             /if (${DebugHeal}) /echo \amDEBUGHEALS WriteDebuffs Clearing debuffs from ini file \agLine#: ${Macro.CurLine}
         }
@@ -10031,7 +10032,7 @@ Sub rev_FindSingleHeals
         /if (${DebugHeal}) /echo \amDEBUGHEALS CheckCures Enter  \agLine#: ${Macro.CurLine}
         /declare i int local
         /declare j int local
-        /declare IniIDList string local ${Ini[FRAMEWORK/${MacroName}_Buffs.ini]}
+        /declare IniIDList string local ${Ini["KissAssist_Buffs.ini"]}
         /declare IniIDCount int local ${Math.Calc[${IniIDList.Count[|]}-1]}
         /declare IniDebuffCount string local 0
         /declare IniDebuffList string local
@@ -10041,7 +10042,7 @@ Sub rev_FindSingleHeals
             /if (!${Cures[${i}].Length}) /continue
             /for j 1 to ${IniIDCount}
                 /varset CuretoCast
-                /varset IniDebuffCount ${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${IniIDList.Arg[${j},|]},"Debuffs"]} 
+                /varset IniDebuffCount ${Ini["KissAssist_Buffs.ini",${IniIDList.Arg[${j},|]},"Debuffs"]} 
                 /varset CTID ${Spawn[${IniIDList.Arg[${j},|]}].ID}
                 /if (${IniDebuffCount.Arg[1,|]} && ${Spawn[${IniIDList.Arg[${j},|]}].ID} && ${Spawn[${IniIDList.Arg[${j},|]}].Distance}<100) {
                     /if (${IniDebuffCount.Arg[1,|]} && ${Cures[${i}].Arg[2,|].Length}==0) {
@@ -11121,7 +11122,7 @@ Sub rev_FindSingleHeals
         /if (${Group.MasterLooter.ID}>=1) /return
         /if (${Debug}) /echo \atDEBUG Sub AssignLooter Enter \agLine#: ${Macro.CurLine}
         /declare k int local
-        /declare IniIDList string local ${Ini[FRAMEWORK/${MacroName}_Buffs.ini]}
+        /declare IniIDList string local ${Ini["KissAssist_Buffs.ini"]}
         /declare IniIDCount int local ${Math.Calc[${IniIDList.Count[|]}-1]}
         | If I am group leader set Main Looter Tag for Group
         /if (${Select[${Me},${Group.Leader}]}) { 
@@ -11278,13 +11279,13 @@ Sub rev_FindSingleHeals
         }    
         /call CleanBuffsFile
         | Write day of the month and hour. Entry will be deleted if more than a hour old
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.ID},Day].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Day "${Time.Day}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.ID},Hour].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Hour "${Time.Hour}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.ID},Zone].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Zone "${Zone.ID}"
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.ID},Buffs].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Buffs
-        /if (!${Ini[FRAMEWORK/${MacroName}_Buffs.ini,${Me.ID},Blockedbuffs].Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Blockedbuffs
-        /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" AmILooting ${LootOn}
-        /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" MyRole ${Role}
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.ID},Day].Length}) /ini "KissAssist_Buffs.ini" "${Me.ID}" Day "${Time.Day}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.ID},Hour].Length}) /ini "KissAssist_Buffs.ini" "${Me.ID}" Hour "${Time.Hour}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.ID},Zone].Length}) /ini "KissAssist_Buffs.ini" "${Me.ID}" Zone "${Zone.ID}"
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.ID},Buffs].Length}) /ini "KissAssist_Buffs.ini" "${Me.ID}" Buffs
+        /if (!${Ini["KissAssist_Buffs.ini",${Me.ID},Blockedbuffs].Length}) /ini "KissAssist_Buffs.ini" "${Me.ID}" Blockedbuffs
+        /ini "KissAssist_Buffs.ini" "${Me.ID}" AmILooting ${LootOn}
+        /ini "KissAssist_Buffs.ini" "${Me.ID}" MyRole ${Role}
         | Write all current buffs to Kissassist_Buffs.ini file
         /for i 0 to 40
             /if (${Window[BuffWindow].Child[BW_Buff${i}_Button].Child[Buff${i}].Tooltip.Find[(]}) {
@@ -11298,7 +11299,7 @@ Sub rev_FindSingleHeals
                 /varset Writebufflist ${Writebufflist}|${BuffList}
             }
         /next i
-        /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Buffs "${Writebufflist}"
+        /ini "KissAssist_Buffs.ini" "${Me.ID}" Buffs "${Writebufflist}"
         /delay 15
         | Open Blocked Buffs window temporarily to read blocked buffs
         /if (!${Window[BlockedBuffWnd].Open} && !${BBWindowOpen}) {
@@ -11313,7 +11314,7 @@ Sub rev_FindSingleHeals
                 /varset Blockedbufflist ${Blockedbufflist}|${Blockedbuff}
             }
         /next k
-        /if (${Blockedbufflist.Length}) /ini FRAMEWORK/${MacroName}_Buffs.ini "${Me.ID}" Blockedbuffs "${Blockedbufflist}"
+        /if (${Blockedbufflist.Length}) /ini "KissAssist_Buffs.ini" "${Me.ID}" Blockedbuffs "${Blockedbufflist}"
         /if (${Window[BlockedBuffWnd].Open}) /windowstate BlockedBuffWnd close
         /varset WriteBuffsTimer 30s
         /if (${DebugBuffs}) /echo \atDEBUGBUFFS WriteBuffs Leave \agLine#: ${Macro.CurLine}
@@ -11440,6 +11441,7 @@ Sub NewCast(TarID, Array, Spell)
 					/return ${CastResult}
 				}
 			} else /if (${Me.CombatAbility[${CastThis}]} && !${Me.CombatAbilityTimer[${CastThis}]} && ${Me.CombatAbilityReady[${CastThis}]} && ${Spell[${CastThis}].EnduranceCost}<${Me.Endurance}) {
+			
 				/varset castflag 1
 				/disc ${Me.CombatAbility[${Me.CombatAbility[${CastThis}]}].ID}
 				/call CastWait "${CastThis}"

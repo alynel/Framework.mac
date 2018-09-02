@@ -412,7 +412,8 @@
 		/if (${Me.State.Equal[FEIGN]}) /stand
 		
 		/if (${Stick.Status.Equal[ON]}) /stick off
-		/if (${DPSOn} && ${MeleeOn}) {
+		/if (${IAmDead} && ${CampZone}==${Zone.ID} && (${Me.Buff[Resurrection Sickness].ID} || ${SpawnCount[pccorpse ${Me}]}==0) ) /varset IAmDead 0
+		/if (${DPSOn} && ${MeleeOn} && !${AutoFireOn}) {
 			/if (${Target.ID}!=${MyTargetID} && ${Spawn[${SpawnSearchType} id ${MyTargetID}].ID} && ${DPSOn} && ${MeleeOn}) {
 				/squelch /target id ${MyTargetID}
 				/delay 10 ${Target.ID}==${MyTargetID}
@@ -427,6 +428,10 @@
 				}
 				/delay 10 ${Stick.Active}
 			}
+			/if (${Select[${Role},tank,pullertank,hunter]}) {
+				/if (${Me.Ability[Taunt]} && ${Me.AbilityReady[Taunt]}) /doability Taunt
+			}
+			/if (!${Me.Combat} && ${BeforeArray[1].NotEqual[null]}) /call BeforeAttack ${MyTargetID}
 			/if (!${Me.Combat} && ${DPSOn} && ${MeleeOn} && ${Target.PctHPs}<=${AssistAt} && ${Target.PctHPs}>0 && ${Target.ID}==${MyTargetID} && ${Spawn[id ${MyTargetID} ${SpawnSearchType} radius ${MeleeDistance}].ID}) {
 					/if (!${Me.Combat} && ${BeforeArray[1].NotEqual[null]}) /call BeforeAttack ${MyTargetID}
 				}
@@ -445,6 +450,7 @@
 			/pet swarm
 			/varset Attacking 1
 		}
+		
 		/varset  MyExp ${Me.PctExp}
 		/varset  MyAAExp ${Me.PctAAExp}
 		/if (${Select[${Zone.ID},795,796]}!=0) {
@@ -454,11 +460,14 @@
 		|COMBAT LOOP
 		
 		/while (1) {
-			|/echo in combatwhile
+			/echo in combatwhile
 			/varcalc cyclecount (${cyclecount})+1
 			/doevents
 			
-			/if (${IAmDead}) /return
+			/if (${IAmDead}) {
+				/varset MyTargetID 0
+				/return
+			}
 			
 			/if (${DPSOn} || ${MeleeOn} || ${PetOn}) /call CombatTargetCheck
 			/if (${Role.Equal[offtank]} && !${Spawn[=${MainAssist}].ID}) /switchma ${Me} tank 0
@@ -466,7 +475,7 @@
 			   /call DoDebuffStuff ${MyTargetID}
 				/if (${Spawn[${MyTargetID}].Type.Equal[Corpse]} || !${Spawn[${MyTargetID}].ID} || ${DPSPaused}) {
 				   /call CombatReset 0 combat
-				   /return
+				   /break
 				}
 			} 
 			
@@ -505,10 +514,10 @@
 				/if (${Role.Equal[puller]} && ${ChainPull} && ${DebuffAllOn}) /call DebuffCast ${MyTargetID} 1 
 				/if (${Role.Equal[puller]} && ${ChainPull} && ${DPSOn}) /call newcombatcast
 			}   
-
-
-			/if ((${Spawn[corpse id ${MyTargetID}].ID}) || (!${Spawn[targetable id ${MyTargetID}].ID}) || ${Me.Hovering} || ${Me.Feigning}) {
+|  ||  (${Me.XTarget[1].ID} > 0 && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}>${MeleeDistance}
+			/if ((${Spawn[corpse id ${MyTargetID}].ID}) || (!${Spawn[targetable id ${MyTargetID}].ID}) || ${Me.Feigning} ||  (${Me.XTarget[1].ID} > 0 && ${Spawn[${SpawnSearchType} id ${MyTargetID}].Distance}>${MeleeDistance}) ) {
 				/call CombatReset 0 combat
+				/varset MyTargetID 0
 				/varset healcount 0
 				/break					
 			}
