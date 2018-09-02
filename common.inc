@@ -362,7 +362,7 @@
 			/call BroadCast ${IRCOn} ${EQBCOn} y "Grabbing MEZ Immune -> ${Spawn[${TempTargetID}].Name} <- ID:${Spawn[${TempTargetID}].ID} "
 			
 		} else {
-			/varset TempTargetID ${SpawnSort[1,desc,PctHPs,xtarhater].ID}
+			/varset TempTargetID ${SpawnSort[1,asc,PctHPs,xtarhater].ID}
 			/call BroadCast ${IRCOn} ${EQBCOn} y "Grabbing Lowest HP Mob -> ${Spawn[${TempTargetID}].Name} <- ID:${Spawn[${TempTargetID}].ID} "
 		}
 			
@@ -526,7 +526,7 @@
 		}
 		
 		/if (${cyclecount}>0) {
-				/echo CYCLES: ${cyclecount}
+				/if (${DebugFramework}) /echo CYCLES: ${cyclecount}
 				/varset cyclecount 0
 			}
 		/varset tmpHealOverride 99.99

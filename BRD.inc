@@ -12,13 +12,13 @@
  *  NOTE:
  ***|
  Sub _BRD
-	/echo in class sub 
+	/if (${DebugFramework}) /echo in class sub 
 	/if (${Me.XTarget}>1 && ${SpawnCount[NPC radius 30]}>1 &&${Me.GemTimer[${MezAESpell}]}==0&&${Me.CurrentMana}>${Spell[${MezAESpell}].Mana}&&${Me.Gem[${MezAESpell}]}) {
 		/squelch /twist once ${Me.Gem[${MezAESpell}]}
 		/call BroadCast ${IRCOn} ${EQBCOn} g "MEZZING-> AE Mezzing Now - ${MezAESpell} "
 	}	
     /if (${MezOn}) {
-			/echo checking Mez
+			/if (${DebugFramework}) /echo checking Mez
 			/varset MezBroke 0
 			/doevents MezBroke
 			/if (!${MezBroke}) /call DoMezStuff

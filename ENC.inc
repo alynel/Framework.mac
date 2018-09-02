@@ -14,7 +14,7 @@
 Sub _enc
 	
     /if (${MezOn}) {
-		/echo checking Mez
+		/if (${DebugFramework}) /echo checking Mez
 		/varset MezBroke 0
 		/doevents MezBroke
 		/if (!${MezBroke}) /call DoMezStuff
@@ -28,7 +28,7 @@ Sub _enc
 		/call newSingleHeal "${Me}" "PC" ${Me.PctHPs} 0 G
 	} else /if (${DPSOn} && ${CombatStart} && ${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} && ${Spawn[${MyTargetID}].ID} && !${Me.Feigning}) {
 		|/call CombatCast
-		/echo combatcast
+		/if (${DebugFramework}) /echo combatcast
 		|/call newcombatcast
 		/call NewCast ${MyTargetID} "DPS"
 	}

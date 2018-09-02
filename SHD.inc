@@ -22,14 +22,14 @@ Sub _shd
 	  
 	}
 	/if (${Me.CombatState.Equal[COMBAT]} && ${Select[${Me.Class.ShortName},WAR,PAL,SHD]} && ${CombatStart} && !${Me.ActiveDisc.ID} && (${Target.Named} || ${Me.XTarget}>1) && ${Target.Distance}<75) {
-		/echo defensive
+		/if (${DebugFramework}) /echo defensive
 		/call SKDefense
 	} else /if (${SpawnSort[1,asc,PctAggro,xtarhater].PctAggro} < 100 && ${CombatStart} && ${Select[${Role},pullertank,tank]}) {
-		/echo aggro
+		/if (${DebugFramework}) /echo aggro
 		|/call Mod_AggroCheck
 		/call NewCast ${SpawnSort[1,asc,PctAggro,xtarhater].ID} "Aggro"
 	} else /if (${DPSOn} && ${CombatStart} && (${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID} || !${Me.Feigning})) {
-		/echo combat cast
+		/if (${DebugFramework}) /echo combat cast
 		/call NewCast ${MyTargetID} "DPS"
 		|/call CombatCast
 		|/call newcombatcast
@@ -44,7 +44,7 @@ Sub _shd
 	|}
 	
 Sub SKDefense
-	/echo in skdefense
+	/if (${DebugFramework}) /echo in skdefense
 	/if (!${Me.ActiveDisc.ID}) {
 	
 		/if (${Me.CombatAbilityReady[Deflection Discipline]} && (${Me.XTarget} > 3 || ${Target.Named}) && !${Me.CombatAbilityReady[${Spell[Unholy Guardian Discipline].RankName}]} && !${Me.CombatAbilityReady[${Spell[Doomscale Mantle].RankName}]} && !${Me.CombatAbilityReady[${Spell[Vizat's Carapace].RankName}]} && !${Me.CombatAbilityReady[${Spell[Unholy Aura Discipline].RankName}]}) {
@@ -52,11 +52,11 @@ Sub SKDefense
 			/disc ${Me.CombatAbility[${Me.CombatAbility[${Spell[Deflection Discipline].RankName}]}].ID}
 		}
 		
-		/echo past deflect
+		/if (${DebugFramework}) /echo past deflect
 		/if ((${Me.XTarget} > 3 || ${Target.Named} || ${Me.PctHPs} < 20) && !${Me.CombatAbilityReady[Deflection Discipline]} && !${Me.AltAbilityReady[Shield Flash]}) {
 			/call CastWhat "Shield Flash"
 		}
-		/echo past shield flash
+		/if (${DebugFramework}) /echo past shield flash
 		/if (${Me.PctEndurance}>5) {
 			/if (${Me.CombatAbilityReady[${Spell[Unholy Guardian Discipline].RankName}]}) {
 				/if (${Me.CombatAbilityReady[${Spell[Cursed Guardian Discipline].RankName}]}) {
@@ -70,7 +70,7 @@ Sub SKDefense
 				/return				
 			}
 			
-			/echo past gaurdian
+			/if (${DebugFramework}) /echo past gaurdian
 			/if (${Me.CombatAbilityReady[${Spell[Unholy Aura Discipline].RankName}]}) {
 					
 				|/disc ${Spell[${Spell[Unholy Aura Discipline].RankName}].ID}
@@ -79,7 +79,7 @@ Sub SKDefense
 				/return				
 			}
 			
-			/echo past Aura
+			/if (${DebugFramework}) /echo past Aura
 			
 			/if (!${Me.CombatAbilityReady[${Spell[Unholy Guardian Discipline].RankName}]} && ${Me.CombatAbilityReady[${Spell[Ichor Guard].RankName}]}) {
 			
@@ -130,7 +130,7 @@ Sub SKDefense
 				
 				/return
 			}
-			/echo past mantle
+			/if (${DebugFramework}) /echo past mantle
 			
 			/if (!${Me.CombatAbilityReady[${Spell[Unholy Guardian Discipline].RankName}]} && !${Me.CombatAbilityReady[${Spell[Ichor Guard].RankName}]} && ${Me.CombatAbilityReady[${Spell[Grelleth's Carapace].RankName}]}) {	
 				/if (${Me.CombatAbilityReady[${Spell[Tylix's Carapace].RankName}]}) {
@@ -160,7 +160,7 @@ Sub SKDefense
 				/return				
 			}
 		
-			/echo past carapace
+			/if (${DebugFramework}) /echo past carapace
 			
 			
 		}

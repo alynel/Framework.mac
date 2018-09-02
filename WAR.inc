@@ -20,14 +20,14 @@ Sub _war
 	}
 	
 	/if (${Me.CombatState.Equal[COMBAT]} && ${Select[${Me.Class.ShortName},WAR,PAL,SHD]} && ${CombatStart} && !${Me.ActiveDisc.ID} && (${Target.Named} || ${Me.XTarget}>1) && ${Target.Distance}<75) {
-		/echo defensive
+		/if (${DebugFramework}) /echo defensive
 		/call WarDefense
 	} else /if (${SpawnSort[1,asc,PctAggro,xtarhater].PctAggro} < 100 && ${CombatStart} && ${Select[${Role},pullertank,tank]}) {
-		/echo aggro
+		/if (${DebugFramework}) /echo aggro
 		|/call Mod_AggroCheck
 		/call NewCast ${SpawnSort[1,asc,PctAggro,xtarhater].ID} "Aggro"
 	} else /if (${DPSOn} && ${CombatStart} && (${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID} || !${Me.Feigning})) {
-		/echo combat cast
+		/if (${DebugFramework}) /echo combat cast
 		|/call CombatCast
 		|/call newcombatcast
 		/call NewCast ${MyTargetID} "DPS"
@@ -57,7 +57,7 @@ Sub WarDefense
 				/return		
 			}
 			
-			/echo past dico
+			/if (${DebugFramework}) /echo past dico
 			
 			/if (!${Me.CombatAbilityReady[${Spell[Dichotomic Shield].RankName}]} && ${Me.CombatAbilityReady[${Spell[Defensive Discipline].RankName}]}) {
 				/if (${Me.CombatAbilityReady[${Spell[Defensive Discipline].RankName}]}) {
@@ -91,7 +91,7 @@ Sub WarDefense
 				}
 			}
 			
-			/echo past defensive disc
+			/if (${DebugFramework}) /echo past defensive disc
 		}
 		
 		|/if (${Me.ItemReady[chest]}) {
@@ -101,7 +101,7 @@ Sub WarDefense
 		|	/return
 		|}
 		
-		/echo past chest
+		/if (${DebugFramework}) /echo past chest
 		
 		/if (${Me.CombatAbilityReady[${Spell[No Time To Bleed].RankName}]} && !${Me.CombatAbilityReady[${Spell[Defensive Discipline].RankName}]} && !${Me.CombatAbilityReady[${Spell[Dichotomic Shield].RankName}]}) {
 				/if (${Me.CombatAbilityReady[${Spell[Pain Doesn't Hurt].RankName}]}) {
@@ -117,7 +117,7 @@ Sub WarDefense
 				
 		}
 		
-		/echo past no time to bleed
+		/if (${DebugFramework}) /echo past no time to bleed
 		
 		/if (!${Me.CombatAbilityReady[${Spell[No Time To Bleed].RankName}]} && !${Me.CombatAbilityReady[${Spell[Defensive Discipline].RankName}]} && ${Me.CombatAbilityReady[${Spell[Armor of Draconic Runes].RankName}]} && ${Me.PctEndurance}>5) {
 			/if (${Me.CombatAbilityReady[${Spell[Armor of Tenacious Runes].RankName}]}) {
@@ -158,7 +158,7 @@ Sub WarDefense
 			:WARRuneEnd
 			/return
 		}			
-		/echo past runes
+		/if (${DebugFramework}) /echo past runes
 		/if (!${Me.CombatAbilityReady[${Spell[No Time To Bleed].RankName}]} && !${Me.CombatAbilityReady[${Spell[Defensive Discipline].RankName}]} && ${Window[CombatAbilityWnd].Child[CAW_CombatEffectLabel].Text.Equal[No Effect]}) {
 					/if (${Me.AltAbilityReady[Warlord's Bravery]}) {
 						|/call CastWhat "Warlord's Bravery"
@@ -186,7 +186,7 @@ Sub WarDefense
 						/return			
 					}				
 		}		
-		/echo past bravery
+		/if (${DebugFramework}) /echo past bravery
 				/if (${Me.AltAbilityReady[Blade Guardian]}) {
 					|/call CastWhat "Blade Guardian"
 					/alt act ${Me.AltAbility[Blade Guardian].ID}
@@ -203,12 +203,12 @@ Sub WarDefense
 							/return
 						}
 				}
-		/echo past blade gaurdian
+		/if (${DebugFramework}) /echo past blade gaurdian
 		/if (${Me.AltAbilityReady[Warlord's Resurgence]}) {
 			|/call CastWhat "Warlord's Resurgence"
 			/alt act ${Me.AltAbility[Warlord's Resurgence].ID}
 			/return
 		}
-		/echo past resurgence
+		/if (${DebugFramework}) /echo past resurgence
 	}
 /return	
