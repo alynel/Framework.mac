@@ -460,7 +460,7 @@
 		|COMBAT LOOP
 		
 		/while (1) {
-			/echo in combatwhile
+			/if (${DebugFramework}) /echo in combatwhile
 			/varcalc cyclecount (${cyclecount})+1
 			/doevents
 			
