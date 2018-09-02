@@ -58,6 +58,15 @@ Sub _pal
 			|/if (${DPSOn} && (!${Role.Equal[puller]} || !${ChainPull})) /call newcombatcast
 			/call NewCast ${MyTargetID} "DPS"
 		}
+	} else /if (${SpawnSort[1,asc,PctAggro,xtarhater].PctAggro} < 100 && ${CombatStart} && ${Select[${Role},pullertank,tank]}) {
+		/echo aggro
+		|/call Mod_AggroCheck
+		/call NewCast ${SpawnSort[1,asc,PctAggro,xtarhater].ID} "Aggro"
+	} else /if (${DPSOn} && ${CombatStart} && (${Spawn[${MyTargetID}].Type.NotEqual[Corpse]} || ${Spawn[${MyTargetID}].ID} || !${Me.Feigning})) {
+		/echo combat cast
+		/call NewCast ${MyTargetID} "DPS"
+		|/call CombatCast
+		|/call newcombatcast
 	}
 	/if (${AutoRezOn}) /call RezCheck
 /return 
